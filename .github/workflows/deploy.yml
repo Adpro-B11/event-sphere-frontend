@@ -22,13 +22,18 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy to EC2
+      - name: Deploy to EC2 (Debug SSH)
         env:
           BRANCH: ${{ github.ref_name }}
         run: |
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} bash -l -c "'
+          ssh -vvv -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} bash -l -c "'
             set -e
+            echo \$PATH
+            which pnpm
+            which pm2
             cd ${{ secrets.EC2_PATH }}
+            export PATH=\$HOME/.local/share/pnpm:\$PATH
+            export PNPM_HOME=\$HOME/.local/share/pnpm
             git fetch origin
             git checkout $BRANCH
             git pull origin $BRANCH
@@ -36,3 +41,4 @@ jobs:
             pnpm build
             pm2 restart next-app || pm2 start \"pnpm start\" --name next-app
           '"
+
