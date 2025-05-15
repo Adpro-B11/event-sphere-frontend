@@ -21,11 +21,17 @@ jobs:
         env:
           BRANCH: ${{ github.ref_name }}
         run: |
+          # First run a diagnostic to find the correct paths
           ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
-            # Export pnpm paths at the beginning
-            export PATH=\$HOME/.local/share/pnpm:\$PATH
-            export PNPM_HOME=\$HOME/.local/share/pnpm
-            
+            echo 'Finding pnpm and pm2 locations:'
+            which pnpm || echo 'pnpm not in PATH'
+            which pm2 || echo 'pm2 not in PATH'
+            npm list -g | grep pnpm || echo 'pnpm not found in npm global'
+            npm list -g | grep pm2 || echo 'pm2 not found in npm global'
+          "
+          
+          # Then run the actual deployment with a login shell to ensure proper environment
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} bash -l -c "
             # Navigate to project directory
             cd ${{ secrets.EC2_PATH }}
             
@@ -35,7 +41,12 @@ jobs:
             git pull origin ${BRANCH}
             
             # Build and deploy
-            \$HOME/.local/share/pnpm/pnpm install
-            \$HOME/.local/share/pnpm/pnpm build
-            pm2 restart next-app || pm2 start \"pnpm start\" --name next-app
+            source ~/.bashrc || true
+            source ~/.profile || true
+            
+            # Try different approaches to run pnpm
+            echo 'Running with npm global path for pnpm and pm2'
+            npm -g exec pnpm install && \\
+            npm -g exec pnpm build && \\
+            npm -g exec pm2 restart next-app || npm -g exec pm2 start 'npm -g exec pnpm start' --name next-app
           "
