@@ -3,8 +3,8 @@
 # Architecture
 
 ## Context Diagram
-![Image](https://github.com/user-attachments/assets/d01312dc-bb9c-4c7a-b2ef-456be836e934)
+![Image](https://github.com/user-attachments/assets/257e3433-8eed-4597-b03d-56072bdc0bee)
 
-![Image](https://github.com/user-attachments/assets/f87a592e-3d34-4ec9-9233-adb5e2cea396)
+![Image](https://github.com/user-attachments/assets/c46933dc-404a-42ec-8819-e50957a847fd)
 
-![Image](https://github.com/user-attachments/assets/f08a6bf8-f2b2-43b7-a8a2-9823c7ab91a7)
+![Image](https://github.com/user-attachments/assets/52d8c2c9-9ac7-4dd2-9503-3a01c010e72a)
