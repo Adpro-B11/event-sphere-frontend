@@ -17,36 +17,78 @@ jobs:
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
-      - name: Deploy to EC2
+      - name: Create Deploy Script
+        run: |
+          cat << 'EOF' > deploy.sh
+          #!/bin/bash
+          set -e
+          
+          # Find Node.js executables
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          
+          # Try multiple locations for Node executables
+          NODE_PATHS=(
+            "$HOME/.nvm/versions/node/*/bin"
+            "$HOME/.local/bin"
+            "/usr/local/bin"
+            "/usr/bin"
+            "$HOME/.npm-global/bin"
+          )
+          
+          for path in "${NODE_PATHS[@]}"; do
+            if [ -d "$path" ]; then
+              export PATH="$path:$PATH"
+            fi
+          done
+          
+          # Navigate to project directory
+          cd "$1"
+          
+          # Git operations
+          git fetch origin
+          git checkout "$2"
+          git pull origin "$2"
+          
+          # Find pnpm and pm2
+          PNPM_CMD=$(command -v pnpm || echo "$HOME/.local/share/pnpm/pnpm" || echo "$HOME/node_modules/.bin/pnpm" || echo "npx pnpm")
+          PM2_CMD=$(command -v pm2 || echo "$HOME/node_modules/.bin/pm2" || echo "npx pm2")
+          
+          echo "Using pnpm at: $PNPM_CMD"
+          echo "Using pm2 at: $PM2_CMD"
+          
+          # Install pnpm and pm2 if not available
+          if ! command -v pnpm &> /dev/null; then
+            echo "Installing pnpm..."
+            npm install -g pnpm || npx pnpm@latest -v
+          fi
+          
+          if ! command -v pm2 &> /dev/null; then
+            echo "Installing pm2..."
+            npm install -g pm2 || npx pm2@latest -v
+          fi
+          
+          # Build and deploy
+          echo "Running pnpm install..."
+          $PNPM_CMD install || npx pnpm install
+          
+          echo "Running pnpm build..."
+          $PNPM_CMD build || npx pnpm build
+          
+          echo "Starting/restarting with PM2..."
+          $PM2_CMD restart next-app || $PM2_CMD start "npx pnpm start" --name next-app || npx pm2 restart next-app || npx pm2 start "npx pnpm start" --name next-app
+          
+          echo "Deployment completed successfully!"
+          EOF
+          
+          chmod +x deploy.sh
+      
+      - name: Copy Deploy Script to Server
+        run: |
+          scp -i ~/.ssh/id_ed25519 deploy.sh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/deploy.sh
+      
+      - name: Execute Deploy Script
         env:
           BRANCH: ${{ github.ref_name }}
         run: |
-          # First run a diagnostic to find the correct paths
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
-            echo 'Finding pnpm and pm2 locations:'
-            which pnpm || echo 'pnpm not in PATH'
-            which pm2 || echo 'pm2 not in PATH'
-            npm list -g | grep pnpm || echo 'pnpm not found in npm global'
-            npm list -g | grep pm2 || echo 'pm2 not found in npm global'
-          "
-          
-          # Then run the actual deployment with a login shell to ensure proper environment
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} bash -l -c "
-            # Navigate to project directory
-            cd ${{ secrets.EC2_PATH }}
-            
-            # Git operations
-            git fetch origin
-            git checkout ${BRANCH}
-            git pull origin ${BRANCH}
-            
-            # Build and deploy
-            source ~/.bashrc || true
-            source ~/.profile || true
-            
-            # Try different approaches to run pnpm
-            echo 'Running with npm global path for pnpm and pm2'
-            npm -g exec pnpm install && \\
-            npm -g exec pnpm build && \\
-            npm -g exec pm2 restart next-app || npm -g exec pm2 start 'npm -g exec pnpm start' --name next-app
-          "
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "bash ~/deploy.sh ${{ secrets.EC2_PATH }} ${BRANCH} || (echo 'Script failed with status $?'; cat ~/deploy-log.txt)"
