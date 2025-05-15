@@ -10,3 +10,12 @@
 
 ## Deployment Diagram
 ![Image](https://github.com/user-attachments/assets/0daa3023-3ca9-4bd5-a212-792158fda3f7)
+
+## Future Architecture
+
+### Context Diagram
+![Image](https://github.com/user-attachments/assets/2226a0d3-10b1-433e-9485-8ec97f39bb17)
+
+### Container Diagram
+![Image](https://github.com/user-attachments/assets/4a0ecde6-4d97-4788-a205-be7628067fa2)
+
