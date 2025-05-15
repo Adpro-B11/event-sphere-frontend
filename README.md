@@ -26,3 +26,11 @@ Pemisahan Ticket System dari Event Sphere System memberikan beberapa keuntungan 
 Penambahan API Gateway dalam arsitektur yang dimodifikasi juga membawa nilai signifikan. Gateway ini berfungsi sebagai titik masuk tunggal yang menyederhanakan akses klien ke berbagai layanan mikro. Keberadaannya memungkinkan penerapan kebijakan keamanan terpusat seperti autentikasi dan otorisasi, sekaligus memfasilitasi monitoring, rate limiting, dan load balancing. Meski demikian, API Gateway dapat menjadi single point of failure jika tidak dirancang dengan redundansi yang memadai. Seiring meningkatnya popularitas aplikasi, gateway harus mampu diskalakan untuk menangani volume permintaan yang tinggi, sementara kompleksitas rute API akan bertambah seiring bertambahnya layanan.
 
 Implementasi arsitektur microservices dengan Spring Boot dan PostgreSQL memberikan fleksibilitas yang dibutuhkan untuk pertumbuhan jangka panjang. Pendekatan ini memungkinkan setiap komponen—seperti layanan tiket, pembayaran, dan autentikasi—diskalakan secara independen sesuai kebutuhan. Penggunaan Spring Boot menawarkan kerangka kerja yang matang dengan kemampuan cloud-native, sementara database PostgreSQL terpisah untuk setiap layanan memastikan isolasi data dan performa yang optimal. Untuk aplikasi yang sukses di masa depan, arsitektur ini perlu dilengkapi dengan strategi sharding dan replikasi database untuk menangani pertumbuhan volume data. Kompleksitas transaksi terdistribusi antar layanan juga memerlukan implementasi pola saga atau eventual consistency yang tepat, sementara potensi ekspansi global mungkin mengharuskan deployment multi-region dengan strategi replikasi lintas region. Integrasi sistem antrian seperti Kafka atau RabbitMQ juga perlu dipertimbangkan untuk memfasilitasi komunikasi asinkron yang efisien antar layanan saat beban mencapai puncak.
+
+# Component Diagram and Code Diagram 
+
+* Event Management 
+* Ticketing Management 
+* Review and Rating 
+* Payment, Balance Management
+* Report System
