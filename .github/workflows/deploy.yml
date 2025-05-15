@@ -1,44 +1,41 @@
 name: Deploy Next.js to EC2
-
 on:
   push:
     branches:
       - main
       - staging
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: production
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
-
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
-
-      - name: Deploy to EC2 (Debug SSH)
+      - name: Deploy to EC2
         env:
           BRANCH: ${{ github.ref_name }}
         run: |
-          ssh -vvv -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} bash -l -c "'
-            set -e
-            echo \$PATH
-            which pnpm
-            which pm2
-            cd ${{ secrets.EC2_PATH }}
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
+            # Export pnpm paths at the beginning
             export PATH=\$HOME/.local/share/pnpm:\$PATH
             export PNPM_HOME=\$HOME/.local/share/pnpm
+            
+            # Navigate to project directory
+            cd ${{ secrets.EC2_PATH }}
+            
+            # Git operations
             git fetch origin
-            git checkout $BRANCH
-            git pull origin $BRANCH
-            pnpm install
-            pnpm build
+            git checkout ${BRANCH}
+            git pull origin ${BRANCH}
+            
+            # Build and deploy
+            \$HOME/.local/share/pnpm/pnpm install
+            \$HOME/.local/share/pnpm/pnpm build
             pm2 restart next-app || pm2 start \"pnpm start\" --name next-app
-          '"
-
+          "
