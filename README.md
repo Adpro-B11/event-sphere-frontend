@@ -31,7 +31,10 @@ Implementasi arsitektur microservices dengan Spring Boot dan PostgreSQL memberik
 
 * Event Management 
 
+## Component Diagram
 ![Event Management - Component Diagram](https://github.com/user-attachments/assets/ede38158-74b5-4a1c-adfa-71bb18232d89)
+
+## Code Diagram
 ![Event Management - Code Diagram](https://github.com/user-attachments/assets/d223b003-f73e-41a7-8ced-f915f88abcf9)
 
 * Ticketing Management 
