@@ -51,6 +51,13 @@ Implementasi arsitektur microservices dengan Spring Boot dan PostgreSQL memberik
 
 ## Code Diagram
 * Payment, Balance Management
+## Component Diagram
+![Image](https://github.com/user-attachments/assets/83225048-7fb6-43f9-bf93-70648dbfd868)
+
+## Code Diagram
+![Image](https://github.com/user-attachments/assets/d800ee7b-1e82-41c1-ae5d-162ef4093324)
+
+
 * Report System
 ## Component Diagram
 ![Report System - Component Diagram](https://github.com/user-attachments/assets/71c95dd0-8dcb-4111-9cea-7caa850049c9)
