@@ -45,6 +45,11 @@ Implementasi arsitektur microservices dengan Spring Boot dan PostgreSQL memberik
 ![codeDiagramAdpro drawio](https://github.com/user-attachments/assets/b0b00ab9-7162-4c63-b67e-34a68aab6dce)
 
 * Review and Rating 
+
+## Component Diagram
+![Review and Rating - Component Diagram](https://github.com/user-attachments/assets/2c0074b3-44d4-4c6e-bd7a-89bc421f280c)
+
+## Code Diagram
 * Payment, Balance Management
 * Report System
 ## Component Diagram
