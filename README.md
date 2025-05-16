@@ -41,3 +41,8 @@ Implementasi arsitektur microservices dengan Spring Boot dan PostgreSQL memberik
 * Review and Rating 
 * Payment, Balance Management
 * Report System
+## Component Diagram
+![Report System - Component Diagram](https://github.com/user-attachments/assets/71c95dd0-8dcb-4111-9cea-7caa850049c9)
+
+## Code Diagram
+![Report System - Code Diagram](https://github.com/user-attachments/assets/d001a1de-a574-433a-86a6-84f5c3f47fa5)
