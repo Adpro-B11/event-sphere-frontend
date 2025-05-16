@@ -37,7 +37,13 @@ Implementasi arsitektur microservices dengan Spring Boot dan PostgreSQL memberik
 ## Code Diagram
 ![Event Management - Code Diagram](https://github.com/user-attachments/assets/d223b003-f73e-41a7-8ced-f915f88abcf9)
 
-* Ticketing Management 
+* Ticketing Management
+## Component Diagram
+![Blank diagram - ticket component diagram](https://github.com/user-attachments/assets/4c8f8130-613f-44cf-89ed-969528baf281)
+
+## Code Diagram
+![codeDiagramAdpro drawio](https://github.com/user-attachments/assets/b0b00ab9-7162-4c63-b67e-34a68aab6dce)
+
 * Review and Rating 
 * Payment, Balance Management
 * Report System
