@@ -288,11 +288,12 @@ export default function EventReviewsPage() {
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-6">
+        // Line 292 - Back to Event button fix
         <Link href={`/events/${eventId}`}>
-          <Button variant="ghost" className="mb-4" type="button">
+          <button className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium bg-transparent text-gray-700 hover:bg-gray-100">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Event
-          </Button>
+          </button>
         </Link>
         <h1 className="text-3xl font-bold mb-2">Reviews for {event.title}</h1>
         <div className="flex items-center space-x-4">
@@ -349,7 +350,9 @@ export default function EventReviewsPage() {
                               {formatDate(review.createdAt)}
                             </span>
                             {review.updatedAt && (
-                              <Badge variant="secondary">Edited</Badge>
+                              <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-800">
+                                Edited
+                              </span>
                             )}
                           </div>
                         </div>
@@ -400,18 +403,16 @@ export default function EventReviewsPage() {
                     <div className="flex space-x-2">
                       <Button 
                         onClick={() => setIsEditing(true)}
-                        variant="outline"
-                        className="flex-1"
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                       >
                         Edit
                       </Button>
-                      <Button 
+                      <button 
                         onClick={handleDeleteReview}
-                        variant="outline"
-                        className="flex-1 text-red-600 hover:bg-red-50"
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                       >
                         Delete
-                      </Button>
+                      </button>
                     </div>
                   </div>
                 ) : (
@@ -440,18 +441,18 @@ export default function EventReviewsPage() {
                         {isSubmitting ? "Submitting..." : (userReview ? "Update Review" : "Submit Review")}
                       </Button>
                       {isEditing && (
-                        <Button 
-                          type="button" 
-                          variant="outline" 
+                        <button 
                           onClick={() => {
                             setIsEditing(false)
-                            setRating(userReview!.rating)
-                            setComment(userReview!.comment)
+                            if (userReview) {
+                              setRating(userReview.rating)
+                              setComment(userReview.comment || "")
+                            }
                           }}
-                          className="flex-1"
+                          className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
                           Cancel
-                        </Button>
+                        </button>
                       )}
                     </div>
                   </form>
