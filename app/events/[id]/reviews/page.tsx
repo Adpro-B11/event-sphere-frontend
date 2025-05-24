@@ -11,35 +11,23 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Star, StarOff, ArrowLeft, User } from "lucide-react"
+import { Star, StarOff, ArrowLeft, User, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-
-interface Review {
-  id: string
-  rating: number
-  comment: string
-  createdAt: string
-  updatedAt?: string
-  userId: string
-  username: string
-  eventId: string
-}
-
-interface Event {
-  id: string
-  title: string
-  date: string
-  status: string
-}
+import EventService from "@/services/event-service"
+import ReviewService from "@/services/review-service"
+import type { Event } from "@/types/event"
+import type { Review, EventRatingSummary } from "@/types/review"
 
 export default function EventReviewsPage() {
   const params = useParams()
   const router = useRouter()
   const { user, isAuthenticated } = useAuth()
   
+  // State management
   const [event, setEvent] = useState<Event | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [userReview, setUserReview] = useState<Review | null>(null)
+  const [ratingSummary, setRatingSummary] = useState<EventRatingSummary | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
@@ -52,76 +40,71 @@ export default function EventReviewsPage() {
 
   const eventId = params.id as string
 
+  // Fetch initial data
   useEffect(() => {
     const fetchData = async () => {
+      if (!eventId) return;
+      
+      setIsLoading(true)
+      setError("")
+      
       try {
-        // TODO: Replace with actual API calls
-        // const eventResponse = await EventService.getEventById(eventId)
-        // const reviewsResponse = await ReviewService.getReviewsByEventId(eventId)
+        // Fetch event details and reviews in parallel
+        const [eventData, reviewsData] = await Promise.all([
+          EventService.getEventById(eventId),
+          ReviewService.getReviewsByEventId(eventId)
+        ])
         
-        // Placeholder data
-        setTimeout(() => {
-          const mockEvent = {
-            id: eventId,
-            title: "Tech Conference 2024",
-            date: "2024-12-25",
-            status: "PUBLISHED"
-          }
-          
-          const mockReviews = [
-            {
-              id: "rev_1",
-              rating: 5,
-              comment: "Amazing event! Great speakers and networking opportunities.",
-              createdAt: "2024-12-26T10:00:00Z",
-              userId: "user_1",
-              username: "John Doe",
-              eventId: eventId
-            },
-            {
-              id: "rev_2",
-              rating: 4,
-              comment: "Very informative sessions, but the venue was a bit crowded.",
-              createdAt: "2024-12-26T14:30:00Z",
-              userId: "user_2",
-              username: "Jane Smith",
-              eventId: eventId
-            }
-          ]
-          
-          setEvent(mockEvent)
-          setReviews(mockReviews)
-          
-          // Check if current user has already reviewed
-          const existingUserReview = mockReviews.find(r => r.userId === user?.id)
+        setEvent(eventData)
+        setReviews(reviewsData)
+        
+        // Check if current user has already reviewed
+        if (user?.id) {
+          const existingUserReview = ReviewService.getUserReview(reviewsData, user.id)
           if (existingUserReview) {
             setUserReview(existingUserReview)
             setRating(existingUserReview.rating)
-            setComment(existingUserReview.comment)
+            setComment(existingUserReview.comment || "")
           }
-          
-          setIsLoading(false)
-        }, 1000)
+        }
+        
+        // Fetch rating summary
+        try {
+          const summary = await ReviewService.getEventRatingSummary(eventId)
+          setRatingSummary(summary)
+        } catch (summaryError) {
+          // If backend summary fails, calculate from reviews
+          const stats = ReviewService.calculateRatingStats(reviewsData)
+          setRatingSummary({
+            eventId,
+            totalReviews: stats.totalReviews,
+            averageRating: stats.averageRating
+          })
+        }
+        
       } catch (err: any) {
-        setError("Failed to load reviews")
+        console.error("Error fetching data:", err)
+        setError(err.response?.data?.message || "Failed to load reviews")
+      } finally {
         setIsLoading(false)
       }
     }
 
-    if (eventId) {
-      fetchData()
-    }
+    fetchData()
   }, [eventId, user?.id])
 
+  // Check if event has finished (only finished events can be reviewed)
   const isEventFinished = (eventDate: string) => {
     const today = new Date()
     const eventDateObj = new Date(eventDate)
     return eventDateObj < today
   }
 
+  // Handle review submission (create or update)
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!isAuthenticated) {
+    
+    if (!isAuthenticated || !user) {
       setError("Please login to submit a review")
       return
     }
@@ -133,70 +116,105 @@ export default function EventReviewsPage() {
 
     setIsSubmitting(true)
     setError("")
+    setSuccess("")
 
     try {
-      // TODO: Replace with actual API call
-      // if (userReview) {
-      //   await ReviewService.updateReview(userReview.id, { rating, comment })
-      // } else {
-      //   await ReviewService.createReview(eventId, { rating, comment })
-      // }
-      
-      // Mock API call
-      setTimeout(() => {
-        setSuccess(userReview ? "Review updated successfully!" : "Review submitted successfully!")
-        setIsSubmitting(false)
-        setIsEditing(false)
-        
-        // Update local state
-        const newReview = {
-          id: userReview?.id || `rev_${Date.now()}`,
+      let updatedReview: Review
+
+      if (userReview) {
+        // Update existing review
+        updatedReview = await ReviewService.updateReview(eventId, userReview.id, {
           rating,
-          comment,
-          createdAt: userReview?.createdAt || new Date().toISOString(),
-          updatedAt: userReview ? new Date().toISOString() : undefined,
-          userId: user!.id,
-          username: user!.username,
-          eventId: eventId
-        }
+          comment: comment.trim() || undefined
+        })
+        setSuccess("Review updated successfully!")
         
-        if (userReview) {
-          setReviews(reviews.map(r => r.id === userReview.id ? newReview : r))
-        } else {
-          setReviews([newReview, ...reviews])
-        }
+        // Update reviews list
+        setReviews(reviews.map(r => r.id === userReview.id ? updatedReview : r))
+      } else {
+        // Create new review
+        updatedReview = await ReviewService.createReview(eventId, {
+          rating,
+          comment: comment.trim() || undefined
+        })
+        setSuccess("Review submitted successfully!")
         
-        setUserReview(newReview)
-      }, 1500)
+        // Add to reviews list
+        setReviews([updatedReview, ...reviews])
+      }
+      
+      setUserReview(updatedReview)
+      setIsEditing(false)
+      
+      // Refresh rating summary
+      try {
+        const summary = await ReviewService.getEventRatingSummary(eventId)
+        setRatingSummary(summary)
+      } catch {
+        // Fallback to manual calculation
+        const newReviews = userReview 
+          ? reviews.map(r => r.id === userReview.id ? updatedReview : r)
+          : [updatedReview, ...reviews]
+        const stats = ReviewService.calculateRatingStats(newReviews)
+        setRatingSummary({
+          eventId,
+          totalReviews: stats.totalReviews,
+          averageRating: stats.averageRating
+        })
+      }
       
     } catch (err: any) {
-      setError("Failed to submit review. Please try again.")
+      console.error("Error submitting review:", err)
+      if (err.response?.status === 409) {
+        setError("You have already reviewed this event")
+      } else if (err.response?.status === 403) {
+        setError("You are not authorized to perform this action")
+      } else {
+        setError(err.response?.data?.message || "Failed to submit review. Please try again.")
+      }
+    } finally {
       setIsSubmitting(false)
     }
   }
 
+  // Handle review deletion
   const handleDeleteReview = async () => {
-    if (!userReview) return
+    if (!userReview || !user) return
     
-    if (window.confirm("Are you sure you want to delete your review?")) {
-      try {
-        // TODO: Replace with actual API call
-        // await ReviewService.deleteReview(userReview.id)
-        
-        setTimeout(() => {
-          setReviews(reviews.filter(r => r.id !== userReview.id))
-          setUserReview(null)
-          setRating(0)
-          setComment("")
-          setSuccess("Review deleted successfully!")
-        }, 500)
-        
-      } catch (err: any) {
-        setError("Failed to delete review")
-      }
+    if (!window.confirm("Are you sure you want to delete your review?")) return
+    
+    setIsSubmitting(true)
+    setError("")
+    
+    try {
+      await ReviewService.deleteReview(eventId, userReview.id)
+      
+      // Remove from UI
+      setReviews(reviews.filter(r => r.id !== userReview.id))
+      setUserReview(null)
+      setRating(0)
+      setComment("")
+      setIsEditing(false)
+      setSuccess("Review deleted successfully!")
+      
+      // Update rating summary
+      const newReviews = reviews.filter(r => r.id !== userReview.id)
+      const stats = ReviewService.calculateRatingStats(newReviews)
+      setRatingSummary({
+        eventId,
+        totalReviews: stats.totalReviews,
+        averageRating: stats.averageRating
+      })
+      
+    } catch (err: any) {
+      console.error("Error deleting review:", err)
+      setError(err.response?.data?.message || "Failed to delete review")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
+  // Star Rating Component
   const StarRating = ({ rating: currentRating, onRatingChange, readonly = false }: { 
     rating: number, 
     onRatingChange?: (rating: number) => void,
@@ -223,6 +241,7 @@ export default function EventReviewsPage() {
     )
   }
 
+  // Format date helper
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('en-US', {
@@ -234,22 +253,19 @@ export default function EventReviewsPage() {
     })
   }
 
-  const calculateAverageRating = () => {
-    if (reviews.length === 0) return 0
-    const sum = reviews.reduce((acc, review) => acc + review.rating, 0)
-    return Number((sum / reviews.length).toFixed(1))
-  }
-
+  // Loading state
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <span className="ml-2">Loading reviews...</span>
         </div>
       </div>
     )
   }
 
+  // Event not found
   if (!event) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -263,9 +279,8 @@ export default function EventReviewsPage() {
     )
   }
 
-  const eventFinished = isEventFinished(event.date)
-
-  if (!eventFinished) {
+  // Event not finished yet
+  if (!isEventFinished(event.date)) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
@@ -288,19 +303,18 @@ export default function EventReviewsPage() {
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-6">
-        // Line 292 - Back to Event button fix
         <Link href={`/events/${eventId}`}>
-          <button className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium bg-transparent text-gray-700 hover:bg-gray-100">
+          <Button variant="ghost" className="mb-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Event
-          </button>
+          </Button>
         </Link>
         <h1 className="text-3xl font-bold mb-2">Reviews for {event.title}</h1>
         <div className="flex items-center space-x-4">
           <div className="flex items-center">
-            <StarRating rating={calculateAverageRating()} readonly />
+            <StarRating rating={ratingSummary?.averageRating || 0} readonly />
             <span className="ml-2 text-lg font-medium">
-              {calculateAverageRating()} ({reviews.length} review{reviews.length !== 1 ? 's' : ''})
+              {ratingSummary?.averageRating?.toFixed(1) || '0.0'} ({ratingSummary?.totalReviews || 0} review{(ratingSummary?.totalReviews || 0) !== 1 ? 's' : ''})
             </span>
           </div>
         </div>
@@ -350,9 +364,9 @@ export default function EventReviewsPage() {
                               {formatDate(review.createdAt)}
                             </span>
                             {review.updatedAt && (
-                              <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-800">
+                              <Badge variant="secondary" className="text-xs">
                                 Edited
-                              </span>
+                              </Badge>
                             )}
                           </div>
                         </div>
@@ -403,16 +417,19 @@ export default function EventReviewsPage() {
                     <div className="flex space-x-2">
                       <Button 
                         onClick={() => setIsEditing(true)}
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        className="flex-1"
+                        variant="outline"
                       >
                         Edit
                       </Button>
-                      <button 
+                      <Button 
                         onClick={handleDeleteReview}
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        className="flex-1"
+                        variant="destructive"
+                        disabled={isSubmitting}
                       >
-                        Delete
-                      </button>
+                        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Delete"}
+                      </Button>
                     </div>
                   </div>
                 ) : (
@@ -437,11 +454,20 @@ export default function EventReviewsPage() {
                     </div>
 
                     <div className="flex space-x-2">
-                      <Button type="submit" disabled={isSubmitting} className="flex-1">
-                        {isSubmitting ? "Submitting..." : (userReview ? "Update Review" : "Submit Review")}
+                      <Button type="submit" disabled={isSubmitting || rating === 0} className="flex-1">
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            {userReview ? "Updating..." : "Submitting..."}
+                          </>
+                        ) : (
+                          userReview ? "Update Review" : "Submit Review"
+                        )}
                       </Button>
                       {isEditing && (
-                        <button 
+                        <Button 
+                          type="button"
+                          variant="outline"
                           onClick={() => {
                             setIsEditing(false)
                             if (userReview) {
@@ -449,10 +475,10 @@ export default function EventReviewsPage() {
                               setComment(userReview.comment || "")
                             }
                           }}
-                          className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          className="flex-1"
                         >
                           Cancel
-                        </button>
+                        </Button>
                       )}
                     </div>
                   </form>
