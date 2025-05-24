@@ -3,11 +3,35 @@
 import Link from "next/link"
 import { useAuth } from "@/contexts/auth-context"
 import { Role } from "@/types/auth"
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react" // Added useEffect and useRef
 
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth()
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false) // Renamed for clarity
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false)
+  const profileDropdownRef = useRef<HTMLDivElement>(null); // Ref for the dropdown
+
+  // Close profile dropdown if clicked outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+        setIsProfileDropdownOpen(false);
+      }
+    }
+    if (isProfileDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isProfileDropdownOpen]);
+
+
+  const handleLogout = () => {
+    logout();
+    setIsProfileDropdownOpen(false); // Close dropdown on logout
+    setIsMobileMenuOpen(false); // Also close mobile menu if open
+  }
 
   return (
     <nav className="bg-gray-800 text-white">
@@ -44,11 +68,14 @@ export default function Navbar() {
                   </Link>
                 )}
 
-                <div className="relative group">
-                  <button className="flex items-center hover:text-gray-300">
+                <div className="relative" ref={profileDropdownRef}>
+                  <button
+                    onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                    className="flex items-center hover:text-gray-300"
+                  >
                     {user?.username}
                     <svg
-                      className="w-4 h-4 ml-1"
+                      className={`w-4 h-4 ml-1 transition-transform duration-200 ${isProfileDropdownOpen ? 'rotate-180' : ''}`} // Rotate arrow
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -57,17 +84,25 @@ export default function Navbar() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                   </button>
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 hidden group-hover:block">
-                    <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                      Profile
-                    </Link>
-                    <button
-                      onClick={logout}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  {isProfileDropdownOpen && (
+                    <div
+                      className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10"
                     >
-                      Logout
-                    </button>
-                  </div>
+                      <Link
+                        href="/profile"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setIsProfileDropdownOpen(false)} // Close on click
+                      >
+                        Profile
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  )}
                 </div>
               </>
             ) : (
@@ -84,9 +119,9 @@ export default function Navbar() {
 
           {/* Mobile menu button */}
           <div className="md:hidden">
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-white focus:outline-none">
+            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-white focus:outline-none">
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                {isMenuOpen ? (
+                {isMobileMenuOpen ? (
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 ) : (
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
@@ -97,50 +132,42 @@ export default function Navbar() {
         </div>
 
         {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden pb-4">
-            <Link href="/" className="block py-2 hover:text-gray-300">
+        {isMobileMenuOpen && (
+           <div className="md:hidden pb-4">
+            <Link href="/" className="block py-2 hover:text-gray-300" onClick={() => setIsMobileMenuOpen(false)}>
               Home
             </Link>
-            <Link href="/events" className="block py-2 hover:text-gray-300">
+            <Link href="/events" className="block py-2 hover:text-gray-300" onClick={() => setIsMobileMenuOpen(false)}>
               Events
             </Link>
-            <Link href="/troubleshoot" className="block py-2 hover:text-gray-300">
-              Troubleshoot
-            </Link>
-
             {isAuthenticated ? (
               <>
-                <Link href="/dashboard" className="block py-2 hover:text-gray-300">
+                <Link href="/dashboard" className="block py-2 hover:text-gray-300" onClick={() => setIsMobileMenuOpen(false)}>
                   Dashboard
                 </Link>
-
                 {user?.role === Role.ADMIN && (
-                  <Link href="/admin" className="block py-2 hover:text-gray-300">
+                  <Link href="/admin" className="block py-2 hover:text-gray-300" onClick={() => setIsMobileMenuOpen(false)}>
                     Admin
                   </Link>
                 )}
-
                 {user?.role === Role.ORGANIZER && (
-                  <Link href="/organizer" className="block py-2 hover:text-gray-300">
+                  <Link href="/organizer" className="block py-2 hover:text-gray-300" onClick={() => setIsMobileMenuOpen(false)}>
                     Organizer
                   </Link>
                 )}
-
-                <Link href="/profile" className="block py-2 hover:text-gray-300">
+                <Link href="/profile" className="block py-2 hover:text-gray-300" onClick={() => setIsMobileMenuOpen(false)}>
                   Profile
                 </Link>
-
-                <button onClick={logout} className="block w-full text-left py-2 hover:text-gray-300">
+                <button onClick={handleLogout} className="block w-full text-left py-2 hover:text-gray-300">
                   Logout
                 </button>
               </>
             ) : (
               <>
-                <Link href="/login" className="block py-2 hover:text-gray-300">
+                <Link href="/login" className="block py-2 hover:text-gray-300" onClick={() => setIsMobileMenuOpen(false)}>
                   Login
                 </Link>
-                <Link href="/register" className="block py-2 hover:text-gray-300">
+                <Link href="/register" className="block py-2 hover:text-gray-300" onClick={() => setIsMobileMenuOpen(false)}>
                   Register
                 </Link>
               </>
