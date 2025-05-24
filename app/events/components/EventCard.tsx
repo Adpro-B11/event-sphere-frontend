@@ -1,12 +1,16 @@
 import React from 'react';
 import { Event } from '../../../lib/eventApi';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/auth-context';
+import { canManageEvent } from '@/utils/role-utils';
 
 interface EventCardProps {
   event: Event;
 }
 
 export const EventCard: React.FC<EventCardProps> = ({ event }) => {
+  const { user } = useAuth();
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {

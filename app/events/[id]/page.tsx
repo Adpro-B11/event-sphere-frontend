@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
+import { useAuth } from "@/contexts/auth-context"
+import { canManageEvent } from "@/utils/role-utils"
 import Link from "next/link"
 import Image from "next/image"
-import { useAuth } from "@/contexts/auth-context"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -16,7 +17,7 @@ import EventService from "@/services/event-service"
 export default function EventDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const { user, isAuthenticated } = useAuth()
+  const { user } = useAuth()
   const [event, setEvent] = useState<Event | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
@@ -314,58 +315,60 @@ export default function EventDetailPage() {
             </CardFooter>
           </Card>
 
-          {/* Admin Actions Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Admin Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Link 
-                href={`/events/${event.id}/edit`} 
-                className="w-full inline-block text-center bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors"
-              >
-                Edit Event
-              </Link>
-              
-              {event.status !== 'PUBLISHED' && (
-                <button 
-                  onClick={() => handleStatusChange('PUBLISHED')}
-                  disabled={updating}
-                  className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 disabled:opacity-50 transition-colors"
+          {/* Admin Actions Card - Only visible to organizers/admins who can manage this event */}
+          {canManageEvent(user) && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Admin Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Link 
+                  href={`/events/${event.id}/edit`} 
+                  className="w-full inline-block text-center bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors"
                 >
-                  {updating ? 'Updating...' : 'Publish Event'}
-                </button>
-              )}
-              
-              {event.status !== 'CANCELLED' && (
-                <button 
-                  onClick={() => handleStatusChange('CANCELLED')}
-                  disabled={updating}
-                  className="w-full bg-orange-600 text-white py-2 px-4 rounded hover:bg-orange-700 disabled:opacity-50 transition-colors"
-                >
-                  {updating ? 'Updating...' : 'Cancel Event'}
-                </button>
-              )}
+                  Edit Event
+                </Link>
+                
+                {event.status !== 'PUBLISHED' && (
+                  <button 
+                    onClick={() => handleStatusChange('PUBLISHED')}
+                    disabled={updating}
+                    className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 disabled:opacity-50 transition-colors"
+                  >
+                    {updating ? 'Updating...' : 'Publish Event'}
+                  </button>
+                )}
+                
+                {event.status !== 'CANCELLED' && (
+                  <button 
+                    onClick={() => handleStatusChange('CANCELLED')}
+                    disabled={updating}
+                    className="w-full bg-orange-600 text-white py-2 px-4 rounded hover:bg-orange-700 disabled:opacity-50 transition-colors"
+                  >
+                    {updating ? 'Updating...' : 'Cancel Event'}
+                  </button>
+                )}
 
-              {event.status !== 'DRAFT' && (
+                {event.status !== 'DRAFT' && (
+                  <button 
+                    onClick={() => handleStatusChange('DRAFT')}
+                    disabled={updating}
+                    className="w-full bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600 disabled:opacity-50 transition-colors"
+                  >
+                    {updating ? 'Updating...' : 'Draft Event'}
+                  </button>
+                )}
+                
                 <button 
-                  onClick={() => handleStatusChange('DRAFT')}
-                  disabled={updating}
-                  className="w-full bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600 disabled:opacity-50 transition-colors"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="w-full bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 disabled:opacity-50 transition-colors"
                 >
-                  {updating ? 'Updating...' : 'Draft Event'}
+                  {deleting ? 'Deleting...' : 'Delete Event'}
                 </button>
-              )}
-              
-              <button 
-                onClick={handleDelete}
-                disabled={deleting}
-                className="w-full bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 disabled:opacity-50 transition-colors"
-              >
-                {deleting ? 'Deleting...' : 'Delete Event'}
-              </button>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
