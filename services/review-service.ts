@@ -17,12 +17,7 @@ const ReviewService = {
   createReview: async (eventId: string, reviewData: CreateReviewRequest): Promise<Review> => {
     const response = await eventApiClient.post<Review>(
       `/api/events/${eventId}/reviews`,
-      reviewData,
-      {
-        headers: {
-          'X-User-ID': localStorage.getItem('userId') || '', // Add user ID header
-        }
-      }
+      reviewData
     );
     return response.data;
   },
@@ -35,12 +30,7 @@ const ReviewService = {
   ): Promise<Review> => {
     const response = await eventApiClient.put<Review>(
       `/api/events/${eventId}/reviews/${reviewId}`,
-      reviewData,
-      {
-        headers: {
-          'X-User-ID': localStorage.getItem('userId') || '',
-        }
-      }
+      reviewData
     );
     return response.data;
   },
@@ -48,9 +38,7 @@ const ReviewService = {
   // Delete a review
   deleteReview: async (eventId: string, reviewId: string): Promise<void> => {
     await eventApiClient.delete(`/api/events/${eventId}/reviews/${reviewId}`, {
-      headers: {
-        'X-User-ID': localStorage.getItem('userId') || '',
-      }
+
     });
   },
 

@@ -137,6 +137,8 @@ export default function EventReviewsPage() {
           rating,
           comment: comment.trim() || undefined
         })
+        console.log(updatedReview)
+        console.log("here")
         setSuccess("Review submitted successfully!")
         
         // Add to reviews list
