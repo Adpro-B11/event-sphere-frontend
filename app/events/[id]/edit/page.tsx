@@ -4,22 +4,30 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { EventForm } from '../../../../components/EventForm';
-import { Event, getEventById, updateEventInfo } from '../../../../lib/eventApi';
+import EventService from "@/services/event-service"; // Gunakan EventService
+import type { Event } from "@/lib/eventApi";
+import { useAuth } from '@/contexts/auth-context';
+import { canManageEvent } from '@/utils/role-utils';
 
 export default function EditEventPage({ params }: { params: { id: string } }) {
   const router = useRouter();
+  const { user } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
+  // Fetch event data
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        const data = await getEventById(params.id);
+        console.log("Fetching event with ID:", params.id);
+        const data = await EventService.getEventById(params.id);
+        console.log("Event data received:", data);
         setEvent(data);
-      } catch (err) {
-        setError('Failed to load event details');
-        console.error(err);
+      } catch (err: any) {
+        console.error("Error fetching event:", err);
+        setError(err.message || 'Failed to load event details');
       } finally {
         setLoading(false);
       }
@@ -28,8 +36,44 @@ export default function EditEventPage({ params }: { params: { id: string } }) {
     fetchEvent();
   }, [params.id]);
 
-  const handleUpdateSuccess = (event: Event) => {
-    router.push(`/events/${event.id}`);
+  // Check permissions
+  useEffect(() => {
+    if (event && user && !canManageEvent(user, event.organizer)) {
+      router.push(`/events/${params.id}`);
+      alert("You don't have permission to edit this event"); // Ganti dengan toast jika tersedia
+    }
+  }, [event, user, params.id, router]);
+
+  // Handle form submission
+  const handleSubmit = async (formValues: any) => {
+    if (!event) return;
+    
+    setIsSaving(true);
+    try {
+      console.log("Updating event with data:", formValues);
+      
+      // Gabungkan data event yang ada dengan perubahan dari form
+      const updatedEventData = {
+        ...event,
+        ...formValues,
+        // Pastikan status dan organizer tidak berubah
+        status: event.status,
+        organizer: event.organizer
+      };
+      
+      // Panggil API untuk update
+      const updatedEvent = await EventService.updateEventInfo(params.id, updatedEventData);
+      console.log("Update successful:", updatedEvent);
+      
+      // Redirect ke halaman detail
+      router.push(`/events/${params.id}`);
+      
+    } catch (err: any) {
+      console.error("Error updating event:", err);
+      setError(err.message || 'Failed to update event');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (loading) return <div className="p-8 text-center">Loading event details...</div>;
@@ -45,8 +89,16 @@ export default function EditEventPage({ params }: { params: { id: string } }) {
       <div className="bg-white rounded-lg shadow-md p-6">
         <h1 className="text-3xl font-bold mb-6">Edit Event</h1>
         <EventForm 
-          initialData={event} 
-          onSubmitSuccess={handleUpdateSuccess} 
+          initialData={{
+            title: event.title,
+            description: event.description,
+            date: event.date,
+            location: event.location,
+            price: event.price
+          }}
+          onSubmit={handleSubmit}
+          isSubmitting={isSaving}
+          error={error || null}
           isEditing={true}
           eventId={params.id}
         />

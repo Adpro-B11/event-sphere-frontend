@@ -9,9 +9,9 @@ const EventService = {
   },
 
   // Get all event
-  getAllEvents: async (): Promise<Event> => {
-    const response = await axiosInstance.get<Event>(`/api/events`);
-    return response.data;
+  getAllEvents: async (): Promise<Event[]> => {
+    const response = await axiosInstance.get<Event[]>('/api/events');
+    return Array.isArray(response.data) ? response.data : [];
   },
 
   // Get an event by ID
