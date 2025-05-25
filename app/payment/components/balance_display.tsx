@@ -69,7 +69,7 @@ export default function BalanceDisplay() {
 
             <DropdownMenuItem asChild>
               <Link
-                  href="/top-up"
+                  href="payment/top-up"
                   className="flex items-center w-full p-2 rounded-md hover:bg-gray-100 cursor-pointer"
                   onClick={() => setIsOpen(false)}
               >
@@ -86,7 +86,7 @@ export default function BalanceDisplay() {
 
             <DropdownMenuItem asChild>
               <Link
-                  href="/transactions"
+                  href="transactions"
                   className="flex items-center w-full p-2 rounded-md hover:bg-gray-100 cursor-pointer"
                   onClick={() => setIsOpen(false)}
               >

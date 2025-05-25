@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -343,7 +342,7 @@ export default function TicketPurchase({
                   variant="outline"
                   className="flex-1"
                 >
-                  <a href="/top-up">
+                  <a href="payment/top-up">
                     <CreditCard className="h-4 w-4 mr-2" />
                     Top Up Balance
                   </a>
