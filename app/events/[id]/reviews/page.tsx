@@ -16,7 +16,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import EventService from "@/services/event-service"
 import ReviewService from "@/services/review-service"
 import type { Event } from "@/types/event"
-import type { Review, EventRatingSummary } from "@/types/review"
+import type { ReviewDTO, EventRatingSummaryDTO } from "@/types/review"
 
 export default function EventReviewsPage() {
   const params = useParams()
@@ -25,9 +25,9 @@ export default function EventReviewsPage() {
   
   // State management
   const [event, setEvent] = useState<Event | null>(null)
-  const [reviews, setReviews] = useState<Review[]>([])
-  const [userReview, setUserReview] = useState<Review | null>(null)
-  const [ratingSummary, setRatingSummary] = useState<EventRatingSummary | null>(null)
+  const [reviews, setReviews] = useState<ReviewDTO[]>([])
+  const [userReview, setUserReview] = useState<ReviewDTO | null>(null)
+  const [ratingSummary, setRatingSummary] = useState<EventRatingSummaryDTO | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
@@ -49,14 +49,24 @@ export default function EventReviewsPage() {
       setError("")
       
       try {
-        // Fetch event details and reviews in parallel
-        const [eventData, reviewsData] = await Promise.all([
-          EventService.getEventById(eventId),
-          ReviewService.getReviewsByEventId(eventId)
+        // Fetch event details first
+        const eventData = await EventService.getEventById(eventId)
+        setEvent(eventData)
+        
+        // Check if event is finished before trying to fetch reviews
+        if (!ReviewService.isEventFinished(eventData.date)) {
+          setIsLoading(false)
+          return
+        }
+        
+        // Fetch reviews and rating summary in parallel
+        const [reviewsData, summaryData] = await Promise.all([
+          ReviewService.getReviewsByEventId(eventId),
+          ReviewService.getEventRatingSummary(eventId)
         ])
         
-        setEvent(eventData)
         setReviews(reviewsData)
+        setRatingSummary(summaryData)
         
         // Check if current user has already reviewed
         if (user?.id) {
@@ -68,23 +78,13 @@ export default function EventReviewsPage() {
           }
         }
         
-        // Fetch rating summary
-        try {
-          const summary = await ReviewService.getEventRatingSummary(eventId)
-          setRatingSummary(summary)
-        } catch (summaryError) {
-          // If backend summary fails, calculate from reviews
-          const stats = ReviewService.calculateRatingStats(reviewsData)
-          setRatingSummary({
-            eventId,
-            totalReviews: stats.totalReviews,
-            averageRating: stats.averageRating
-          })
-        }
-        
       } catch (err: any) {
         console.error("Error fetching data:", err)
-        setError(err.response?.data?.message || "Failed to load reviews")
+        if (err.response?.status === 400) {
+          setError("Reviews are not available for this event yet")
+        } else {
+          setError(err.response?.data?.message || "Failed to load reviews")
+        }
       } finally {
         setIsLoading(false)
       }
@@ -92,13 +92,6 @@ export default function EventReviewsPage() {
 
     fetchData()
   }, [eventId, user?.id])
-
-  // Check if event has finished (only finished events can be reviewed)
-  const isEventFinished = (eventDate: string) => {
-    const today = new Date()
-    const eventDateObj = new Date(eventDate)
-    return eventDateObj < today
-  }
 
   // Handle review submission (create or update)
   const handleSubmitReview = async (e: React.FormEvent) => {
@@ -114,31 +107,42 @@ export default function EventReviewsPage() {
       return
     }
 
+    // Check if user has ticket (temporary - always returns true)
+    if (!ReviewService.userHasTicket(user.id, eventId)) {
+      setError("You need to have a ticket for this event to leave a review")
+      return
+    }
+
     setIsSubmitting(true)
     setError("")
     setSuccess("")
 
     try {
-      let updatedReview: Review
+      let updatedReview: ReviewDTO
 
       if (userReview) {
         // Update existing review
-        updatedReview = await ReviewService.updateReview(eventId, userReview.id, {
-          rating,
-          comment: comment.trim() || undefined
-        })
+        updatedReview = await ReviewService.updateReview(
+          eventId, 
+          userReview.id, 
+          rating, 
+          comment.trim() || undefined, 
+          user.id, 
+          user.username
+        )
         setSuccess("Review updated successfully!")
         
         // Update reviews list
         setReviews(reviews.map(r => r.id === userReview.id ? updatedReview : r))
       } else {
         // Create new review
-        updatedReview = await ReviewService.createReview(eventId, {
-          rating,
-          comment: comment.trim() || undefined
-        })
-        console.log(updatedReview)
-        console.log("here")
+        updatedReview = await ReviewService.createReview(
+          eventId, 
+          rating, 
+          comment.trim() || undefined, 
+          user.id, 
+          user.username
+        )
         setSuccess("Review submitted successfully!")
         
         // Add to reviews list
@@ -171,6 +175,8 @@ export default function EventReviewsPage() {
         setError("You have already reviewed this event")
       } else if (err.response?.status === 403) {
         setError("You are not authorized to perform this action")
+      } else if (err.response?.status === 400) {
+        setError("Cannot submit review for this event")
       } else {
         setError(err.response?.data?.message || "Failed to submit review. Please try again.")
       }
@@ -189,7 +195,7 @@ export default function EventReviewsPage() {
     setError("")
     
     try {
-      await ReviewService.deleteReview(eventId, userReview.id)
+      await ReviewService.deleteReview(eventId, userReview.id, user.id, user.username)
       
       // Remove from UI
       setReviews(reviews.filter(r => r.id !== userReview.id))
@@ -210,7 +216,13 @@ export default function EventReviewsPage() {
       
     } catch (err: any) {
       console.error("Error deleting review:", err)
-      setError(err.response?.data?.message || "Failed to delete review")
+      if (err.response?.status === 403) {
+        setError("You are not authorized to delete this review")
+      } else if (err.response?.status === 404) {
+        setError("Review not found")
+      } else {
+        setError(err.response?.data?.message || "Failed to delete review")
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -282,7 +294,7 @@ export default function EventReviewsPage() {
   }
 
   // Event not finished yet
-  if (!isEventFinished(event.date)) {
+  if (!ReviewService.isEventFinished(event.date)) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
@@ -314,7 +326,7 @@ export default function EventReviewsPage() {
         <h1 className="text-3xl font-bold mb-2">Reviews for {event.title}</h1>
         <div className="flex items-center space-x-4">
           <div className="flex items-center">
-            <StarRating rating={ratingSummary?.averageRating || 0} readonly />
+            <StarRating rating={Math.round(ratingSummary?.averageRating || 0)} readonly />
             <span className="ml-2 text-lg font-medium">
               {ratingSummary?.averageRating?.toFixed(1) || '0.0'} ({ratingSummary?.totalReviews || 0} review{(ratingSummary?.totalReviews || 0) !== 1 ? 's' : ''})
             </span>
