@@ -9,9 +9,9 @@ const EventService = {
   },
 
   // Get all event
-  getAllEvents: async (): Promise<Event> => {
-    const response = await axiosInstance.get<Event>(`/api/events`);
-    return response.data;
+  getAllEvents: async (): Promise<Event[]> => {
+    const response = await axiosInstance.get<Event[]>('/api/events');
+    return Array.isArray(response.data) ? response.data : [];
   },
 
   // Get an event by ID
@@ -27,10 +27,19 @@ const EventService = {
   },
 
   // Update event status
-  updateEventStatus: async (eventId: string, status: string): Promise<Event> => {
-    const response = await axiosInstance.patch<Event>(`/api/events/${eventId}/status`, { status });
+  // event-service.ts :contentReference[oaicite:0]{index=0}
+  updateEventStatus: async (
+    eventId: string,
+    status: string,
+    username: string
+  ): Promise<Event> => {
+    const response = await axiosInstance.patch<Event>(
+      `/api/events/${eventId}/status`,
+      { status, username }
+    );
     return response.data;
   },
+
 
   // Update event information
   updateEventInfo: async (id: string, data: Partial<Event>): Promise<Event> => {

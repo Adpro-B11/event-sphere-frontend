@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
+import { useAuth } from "@/contexts/auth-context"
+import { canManageEvent } from "@/utils/role-utils"
 import Link from "next/link"
 import Image from "next/image"
-import { useAuth } from "@/contexts/auth-context"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -17,7 +18,7 @@ import TicketManagement from "@/components/tickets/ticket-management"
 export default function EventDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const { user, isAuthenticated } = useAuth()
+  const { user } = useAuth()
   const [event, setEvent] = useState<Event | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
@@ -59,20 +60,23 @@ export default function EventDetailPage() {
   }
 
   const handleStatusChange = async (newStatus: string) => {
-    setUpdating(true)
+    if (!user) return;
+    setUpdating(true);
     try {
-      await EventService.updateEventStatus(eventId, newStatus)
-      // Fetch the updated event data
-      const updatedEvent = await EventService.getEventById(eventId)
-      setEvent(updatedEvent)
+      const updatedEvent = await EventService.updateEventStatus(
+        eventId,
+        newStatus,
+        user.username
+      );
+      // langsung update state biar badge dan tombol berubah
+      setEvent(updatedEvent);
     } catch (err) {
-      setError(`Failed to update event status to ${newStatus}`)
-      console.error(err)
+      console.error("Failed to update status:", err);
+      setError("Gagal mengubah status event");
     } finally {
-      setUpdating(false)
+      setUpdating(false);
     }
-  }
-
+  };
   const isEventFinished = (eventDate: string) => {
     const today = new Date()
     const eventDateObj = new Date(eventDate)
@@ -184,19 +188,16 @@ export default function EventDetailPage() {
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Main Content */}
         <div className="lg:col-span-2">
-          {/* Event Image Placeholder */}
           <div className="mb-8">
-            <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <Image
-                  src="/placeholder.svg?height=100&width=100"
-                  alt="Event placeholder"
-                  width={100}
-                  height={100}
-                  className="mx-auto mb-2 opacity-50"
-                />
-                <p>Event Image</p>
-              </div>
+            <div className="w-full h-full rounded-lg overflow-hidden">
+              <Image 
+                src="https://ticket.eventhk.com/image/cache/catalog/journal3/HOME-eventhk2015-5764x3000.jpg" 
+                alt={`${event.title} event image`}
+                width={1000}
+                height={500}
+                className="w-full h-full object-cover"
+                priority
+              />
             </div>
           </div>
 
@@ -331,22 +332,22 @@ export default function EventDetailPage() {
                   </button>
                 )}
 
-                {event.status !== "DRAFT" && (
-                  <button
-                    onClick={() => handleStatusChange("DRAFT")}
+                {event.status !== 'DRAFT' && (
+                  <button 
+                    onClick={() => handleStatusChange('DRAFT')}
                     disabled={updating}
                     className="w-full bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600 disabled:opacity-50 transition-colors"
                   >
-                    {updating ? "Updating..." : "Draft Event"}
+                    {updating ? 'Updating...' : 'Draft Event'}
                   </button>
                 )}
-
-                <button
+                
+                <button 
                   onClick={handleDelete}
                   disabled={deleting}
                   className="w-full bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 disabled:opacity-50 transition-colors"
                 >
-                  {deleting ? "Deleting..." : "Delete Event"}
+                  {deleting ? 'Deleting...' : 'Delete Event'}
                 </button>
               </CardContent>
             </Card>
