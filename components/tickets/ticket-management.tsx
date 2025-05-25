@@ -266,69 +266,83 @@ const handlePurchaseClick = () => {
         ) : (
           <div className="space-y-4">
             {tickets.map((ticket) => (
-              <div key={ticket.id} className="border rounded-lg p-4 lg:p-6 bg-white shadow-sm space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <Badge className={getTicketTypeColor(ticket.type)}>
-                        {TICKET_TYPES.find((t) => t.value === ticket.type)?.label || ticket.type}
-                      </Badge>
-                      {!ticket.active && (
-                        <Badge variant="outline" className="text-red-600 border-red-600">
-                          Inactive
+              <div key={ticket.id} className="border rounded-lg p-4 lg:p-6 bg-white shadow-sm">
+                <div className="flex flex-col gap-4">
+                  {/* Header section with badges and admin controls */}
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <Badge className={getTicketTypeColor(ticket.type)}>
+                          {TICKET_TYPES.find((t) => t.value === ticket.type)?.label || ticket.type}
                         </Badge>
-                      )}
+                        {!ticket.active && (
+                          <Badge variant="outline" className="text-red-600 border-red-600">
+                            Inactive
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        {TICKET_TYPES.find((t) => t.value === ticket.type)?.description}
+                      </p>
                     </div>
-                    <p className="text-xs text-gray-500 mb-2">
-                      {TICKET_TYPES.find((t) => t.value === ticket.type)?.description}
-                    </p>
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-                      <div className="min-w-0">
-                        <p className="font-medium text-gray-700 mb-1">Price</p>
-                        <p className="text-base lg:text-lg font-bold text-green-600 leading-tight">{formatPrice(ticket.price)}</p>
+                    {canManageTickets && (
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-9 w-9 p-0"
+                          onClick={() => {
+                            setSelectedTicket(ticket)
+                            setEditForm({
+                              type: ticket.type,
+                              price: ticket.price,
+                              quota: ticket.quota,
+                            })
+                            setEditDialogOpen(true)
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="h-9 w-9 p-0 text-red-600 hover:text-red-700 hover:bg-red-50" 
+                          onClick={() => handleDeleteTicket(ticket.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
-                      <div className="min-w-0">
-                        <p className="font-medium text-gray-700 mb-1">Total Quota</p>
-                        <p className="text-base font-semibold">{ticket.quota}</p>
+                    )}
+                  </div>
+
+                  {/* Ticket details section - two rows to prevent overlap */}
+                  <div className="space-y-4">
+                    {/* First row: Price and Total Quota */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <p className="text-xs font-medium text-gray-700 uppercase tracking-wide">Price</p>
+                        <p className="text-lg font-bold text-green-600">{formatPrice(ticket.price)}</p>
                       </div>
-                      <div className="min-w-0">
-                        <p className="font-medium text-gray-700 mb-1">Remaining</p>
-                        <p className={`text-base font-semibold ${ticket.remaining === 0 ? "text-red-600" : "text-gray-900"}`}>{ticket.remaining}</p>
+                      <div className="space-y-1">
+                        <p className="text-xs font-medium text-gray-700 uppercase tracking-wide">Total Quota</p>
+                        <p className="text-lg font-semibold text-gray-900">{ticket.quota}</p>
                       </div>
-                      <div className="min-w-0">
-                        <p className="font-medium text-gray-700 mb-1">Sold</p>
-                        <p className="text-base font-semibold text-blue-600">{ticket.quota - ticket.remaining}</p>
+                    </div>
+                    
+                    {/* Second row: Remaining and Sold */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <p className="text-xs font-medium text-gray-700 uppercase tracking-wide">Remaining</p>
+                        <p className={`text-lg font-semibold ${ticket.remaining === 0 ? "text-red-600" : "text-gray-900"}`}>
+                          {ticket.remaining}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs font-medium text-gray-700 uppercase tracking-wide">Sold</p>
+                        <p className="text-lg font-semibold text-blue-600">{ticket.quota - ticket.remaining}</p>
                       </div>
                     </div>
                   </div>
-                  {canManageTickets && (
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-9 w-9 p-0"
-                        onClick={() => {
-                          setSelectedTicket(ticket)
-                          setEditForm({
-                            type: ticket.type,
-                            price: ticket.price,
-                            quota: ticket.quota,
-                          })
-                          setEditDialogOpen(true)
-                        }}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="h-9 w-9 p-0 text-red-600 hover:text-red-700 hover:bg-red-50" 
-                        onClick={() => handleDeleteTicket(ticket.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
                 </div>
               </div>
             ))}
