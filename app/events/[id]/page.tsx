@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { CalendarDays, MapPin, User, DollarSign, Star, MessageSquare } from "lucide-react"
+import { CalendarDays, MapPin, User, DollarSign, MessageSquare, Star } from 'lucide-react'
 import type { Event } from "@/types/event"
 import EventService from "@/services/event-service"
 import TicketManagement from "@/components/tickets/ticket-management"
@@ -170,10 +170,10 @@ export default function EventDetailPage() {
 
       {/* Event Header */}
       <div className="mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">{event.title}</h1>
-            <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 break-words">{event.title}</h1>
+            <div className="flex flex-wrap items-center gap-2">
               <Badge className={getStatusBadgeColor(event.status || "DRAFT")}>{event.status || "DRAFT"}</Badge>
               {eventFinished && (
                 <Badge variant="outline" className="text-blue-600 border-blue-600">
@@ -185,11 +185,11 @@ export default function EventDetailPage() {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Main Content */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 min-w-0">
           <div className="mb-8">
-            <div className="w-full h-full rounded-lg overflow-hidden">
+            <div className="w-full h-64 sm:h-80 lg:h-96 rounded-lg overflow-hidden">
               <Image 
                 src="https://ticket.eventhk.com/image/cache/catalog/journal3/HOME-eventhk2015-5764x3000.jpg" 
                 alt={`${event.title} event image`}
@@ -204,10 +204,10 @@ export default function EventDetailPage() {
           {/* Event Description */}
           <Card className="mb-8">
             <CardHeader>
-              <CardTitle>About This Event</CardTitle>
+              <CardTitle className="text-lg">About This Event</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+              <p className="text-gray-700 leading-relaxed whitespace-pre-line text-sm sm:text-base break-words">
                 {event.description || "No description provided."}
               </p>
             </CardContent>
@@ -217,11 +217,11 @@ export default function EventDetailPage() {
           {eventFinished && (
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Star className="h-5 w-5 text-yellow-500" />
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Star className="h-5 w-5 text-yellow-500 flex-shrink-0" />
                   Event Reviews
                 </CardTitle>
-                <CardDescription>See what attendees thought about this event</CardDescription>
+                <CardDescription className="text-sm">See what attendees thought about this event</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-4">
@@ -238,19 +238,19 @@ export default function EventDetailPage() {
         </div>
 
         {/* Sidebar */}
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 min-w-0">
           {/* Event Details Card */}
           <Card className="mb-6 top-4">
             <CardHeader>
-              <CardTitle>Event Details</CardTitle>
+              <CardTitle className="text-lg">Event Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Date */}
               <div className="flex items-start gap-3">
-                <CalendarDays className="h-5 w-5 text-gray-500 mt-0.5" />
-                <div>
-                  <p className="font-medium">Date & Time</p>
-                  <p className="text-gray-600">{formatDate(event.date)}</p>
+                <CalendarDays className="h-5 w-5 text-gray-500 mt-0.5 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-sm">Date & Time</p>
+                  <p className="text-gray-600 text-sm break-words">{formatDate(event.date)}</p>
                 </div>
               </div>
 
@@ -258,10 +258,10 @@ export default function EventDetailPage() {
 
               {/* Location */}
               <div className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-gray-500 mt-0.5" />
-                <div>
-                  <p className="font-medium">Location</p>
-                  <p className="text-gray-600">{event.location}</p>
+                <MapPin className="h-5 w-5 text-gray-500 mt-0.5 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-sm">Location</p>
+                  <p className="text-gray-600 text-sm break-words">{event.location}</p>
                 </div>
               </div>
 
@@ -271,22 +271,22 @@ export default function EventDetailPage() {
               {event.organizer && (
                 <>
                   <div className="flex items-start gap-3">
-                    <User className="h-5 w-5 text-gray-500 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Organizer</p>
-                      <p className="text-gray-600">{event.organizer}</p>
+                    <User className="h-5 w-5 text-gray-500 mt-0.5 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-sm">Organizer</p>
+                      <p className="text-gray-600 text-sm break-words">{event.organizer}</p>
                     </div>
                   </div>
                   <Separator />
                 </>
               )}
 
-              {/* Price Range - Updated to show ticket price range */}
+              {/* Price Range */}
               <div className="flex items-start gap-3">
-                <DollarSign className="h-5 w-5 text-gray-500 mt-0.5" />
-                <div>
-                  <p className="font-medium">Starting Price</p>
-                  <p className="text-lg font-bold text-green-600">{formatPrice(event.price)}</p>
+                <DollarSign className="h-5 w-5 text-gray-500 mt-0.5 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-sm">Starting Price</p>
+                  <p className="text-base font-bold text-green-600 break-all">{formatPrice(event.price)}</p>
                   <p className="text-xs text-gray-500">See tickets below for all pricing</p>
                 </div>
               </div>
@@ -302,12 +302,12 @@ export default function EventDetailPage() {
           {canManageEvent && (
             <Card>
               <CardHeader>
-                <CardTitle>Admin Actions</CardTitle>
+                <CardTitle className="text-lg">Admin Actions</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-3">
                 <Link
                   href={`/events/${event.id}/edit`}
-                  className="w-full inline-block text-center bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors"
+                  className="w-full inline-block text-center bg-blue-600 text-white py-2.5 px-4 rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
                 >
                   Edit Event
                 </Link>
@@ -316,7 +316,7 @@ export default function EventDetailPage() {
                   <button
                     onClick={() => handleStatusChange("PUBLISHED")}
                     disabled={updating}
-                    className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 disabled:opacity-50 transition-colors"
+                    className="w-full bg-green-600 text-white py-2.5 px-4 rounded-md hover:bg-green-700 disabled:opacity-50 transition-colors text-sm font-medium"
                   >
                     {updating ? "Updating..." : "Publish Event"}
                   </button>
@@ -326,7 +326,7 @@ export default function EventDetailPage() {
                   <button
                     onClick={() => handleStatusChange("CANCELLED")}
                     disabled={updating}
-                    className="w-full bg-orange-600 text-white py-2 px-4 rounded hover:bg-orange-700 disabled:opacity-50 transition-colors"
+                    className="w-full bg-orange-600 text-white py-2.5 px-4 rounded-md hover:bg-orange-700 disabled:opacity-50 transition-colors text-sm font-medium"
                   >
                     {updating ? "Updating..." : "Cancel Event"}
                   </button>
@@ -336,7 +336,7 @@ export default function EventDetailPage() {
                   <button 
                     onClick={() => handleStatusChange('DRAFT')}
                     disabled={updating}
-                    className="w-full bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600 disabled:opacity-50 transition-colors"
+                    className="w-full bg-gray-500 text-white py-2.5 px-4 rounded-md hover:bg-gray-600 disabled:opacity-50 transition-colors text-sm font-medium"
                   >
                     {updating ? 'Updating...' : 'Draft Event'}
                   </button>
@@ -345,7 +345,7 @@ export default function EventDetailPage() {
                 <button 
                   onClick={handleDelete}
                   disabled={deleting}
-                  className="w-full bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 disabled:opacity-50 transition-colors"
+                  className="w-full bg-red-600 text-white py-2.5 px-4 rounded-md hover:bg-red-700 disabled:opacity-50 transition-colors text-sm font-medium"
                 >
                   {deleting ? 'Deleting...' : 'Delete Event'}
                 </button>

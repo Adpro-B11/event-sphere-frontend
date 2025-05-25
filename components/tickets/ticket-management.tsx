@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Ticket, Plus, Edit, Trash2, ShoppingCart } from "lucide-react"
+import { Ticket, Plus, Edit, Trash2, ShoppingCart } from 'lucide-react'
 import type { Ticket as TicketType, CreateTicketRequest, UpdateTicketRequest } from "@/types/ticket"
 import TicketService from "@/services/ticket-service"
 import { useAuth } from "@/contexts/auth-context"
@@ -266,9 +266,9 @@ const handlePurchaseClick = () => {
         ) : (
           <div className="space-y-4">
             {tickets.map((ticket) => (
-              <div key={ticket.id} className="border rounded-lg p-4 bg-white shadow-sm space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
+              <div key={ticket.id} className="border rounded-lg p-4 lg:p-6 bg-white shadow-sm space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                  <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-2">
                       <Badge className={getTicketTypeColor(ticket.type)}>
                         {TICKET_TYPES.find((t) => t.value === ticket.type)?.label || ticket.type}
@@ -282,49 +282,53 @@ const handlePurchaseClick = () => {
                     <p className="text-xs text-gray-500 mb-2">
                       {TICKET_TYPES.find((t) => t.value === ticket.type)?.description}
                     </p>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm break-words">
-                      <div>
-                        <p className="font-medium">Price</p>
-                        <p className="text-lg font-bold text-green-600">{formatPrice(ticket.price)}</p>
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-700 mb-1">Price</p>
+                        <p className="text-base lg:text-lg font-bold text-green-600 leading-tight">{formatPrice(ticket.price)}</p>
                       </div>
-                      <div>
-                        <p className="font-medium">Total Quota</p>
-                        <p>{ticket.quota}</p>
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-700 mb-1">Total Quota</p>
+                        <p className="text-base font-semibold">{ticket.quota}</p>
                       </div>
-                      <div>
-                        <p className="font-medium">Remaining</p>
-                        <p className={ticket.remaining === 0 ? "text-red-600 font-medium" : ""}>{ticket.remaining}</p>
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-700 mb-1">Remaining</p>
+                        <p className={`text-base font-semibold ${ticket.remaining === 0 ? "text-red-600" : "text-gray-900"}`}>{ticket.remaining}</p>
                       </div>
-                      <div>
-                        <p className="font-medium">Sold</p>
-                        <p>{ticket.quota - ticket.remaining}</p>
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-700 mb-1">Sold</p>
+                        <p className="text-base font-semibold text-blue-600">{ticket.quota - ticket.remaining}</p>
                       </div>
                     </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2 mt-4 md:mt-0 md:ml-4">
-                    {canManageTickets && (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setSelectedTicket(ticket)
-                            setEditForm({
-                              type: ticket.type,
-                              price: ticket.price,
-                              quota: ticket.quota,
-                            })
-                            setEditDialogOpen(true)
-                          }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => handleDeleteTicket(ticket.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </>
-                    )}
-                  </div>
+                  {canManageTickets && (
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-9 w-9 p-0"
+                        onClick={() => {
+                          setSelectedTicket(ticket)
+                          setEditForm({
+                            type: ticket.type,
+                            price: ticket.price,
+                            quota: ticket.quota,
+                          })
+                          setEditDialogOpen(true)
+                        }}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="h-9 w-9 p-0 text-red-600 hover:text-red-700 hover:bg-red-50" 
+                        onClick={() => handleDeleteTicket(ticket.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
