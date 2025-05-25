@@ -186,19 +186,16 @@ export default function EventDetailPage() {
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Main Content */}
         <div className="lg:col-span-2">
-          {/* Event Image Placeholder */}
           <div className="mb-8">
-            <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <Image 
-                  src="/placeholder.svg" 
-                  alt="Event placeholder" 
-                  width={100} 
-                  height={100} 
-                  className="mx-auto mb-2 opacity-50"
-                />
-                <p>Event Image</p>
-              </div>
+            <div className="w-full h-full rounded-lg overflow-hidden">
+              <Image 
+                src="https://ticket.eventhk.com/image/cache/catalog/journal3/HOME-eventhk2015-5764x3000.jpg" 
+                alt={`${event.title} event image`}
+                width={1000}
+                height={500}
+                className="w-full h-full object-cover"
+                priority
+              />
             </div>
           </div>
 
