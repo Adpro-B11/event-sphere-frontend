@@ -542,10 +542,20 @@ export default function AdminReportsPage() {
                         initialFocus
                         mode="range"
                         defaultMonth={dateRange.from || undefined}
-                        selected={dateRange}
-                        onSelect={(range) =>
-                          setDateRange(range || { from: null, to: null })
-                        }
+                        selected={{
+                          from: dateRange.from || undefined,
+                          to: dateRange.to || undefined,
+                        }}
+                        onSelect={(range) => {
+                          if (!range) {
+                            setDateRange({ from: null, to: null });
+                          } else {
+                            setDateRange({
+                              from: range.from || null,
+                              to: range.to || null,
+                            });
+                          }
+                        }}
                         numberOfMonths={2}
                       />
                     </PopoverContent>
