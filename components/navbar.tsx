@@ -56,6 +56,18 @@ export default function Navbar() {
                   Dashboard
                 </Link>
 
+                {user?.role !== Role.ADMIN && user?.role !== Role.ORGANIZER && (
+                  <Link href="/reports" className="hover:text-gray-300">
+                    Reports
+                  </Link>
+                )}
+
+                {(user?.role === Role.ADMIN || user?.role === Role.ORGANIZER) && (
+                  <Link href="/management-reports" className="hover:text-gray-300">
+                    Management Reports
+                  </Link>
+                )}
+
                 {user?.role === Role.ADMIN && (
                   <Link href="/admin" className="hover:text-gray-300">
                     Admin
