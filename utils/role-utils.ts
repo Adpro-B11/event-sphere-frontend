@@ -13,15 +13,12 @@ export const isAdmin = (user: User | null): boolean => {
   return hasRole(user, "ADMIN");
 };
 
-export const canManageEvent = (user: User | null, eventOrganizer?: string): boolean => {
+export const canManageEvent = (user: User | null, eventOrganizer?: string | null): boolean => {
   if (!user) return false;
   
-  // Organizer can only manage their own events
-  if (isOrganizer(user)) {
-    // If no event organizer specified, general create permission
+  if (user.role?.includes('ORGANIZER')) {
     if (!eventOrganizer) return true;
     
-    // Otherwise check if this is the organizer's own event
     return user.username === eventOrganizer;
   }
   

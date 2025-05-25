@@ -74,12 +74,6 @@ export default function Navbar() {
                   </Link>
                 )}
 
-                {user?.role === Role.ORGANIZER && (
-                  <Link href="/organizer" className="hover:text-gray-300">
-                    Organizer
-                  </Link>
-                )}
-
                 <div className="relative" ref={profileDropdownRef}>
                   <button
                     onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}

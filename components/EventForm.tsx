@@ -13,6 +13,8 @@ interface EventFormProps {
   onSubmit: (values: EventFormValues) => void;
   isSubmitting?: boolean;
   error?: string | null;
+  isEditing?: boolean; // Tambahkan prop ini
+  eventId?: string;    // Tambahkan prop ini
 }
 
 export const EventForm: React.FC<EventFormProps> = ({
@@ -20,6 +22,8 @@ export const EventForm: React.FC<EventFormProps> = ({
   onSubmit,
   isSubmitting = false,
   error,
+  isEditing = false, // Tambahkan parameter ini
+  eventId, // Tambahkan ini juga agar konsisten
 }) => {
   const [formData, setFormData] = useState<EventFormValues>({
     title:       initialData.title || "",
@@ -178,7 +182,7 @@ export const EventForm: React.FC<EventFormProps> = ({
         disabled={isSubmitting}
         className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:opacity-50"
       >
-        {isSubmitting ? "Saving..." : "Create Event"}
+        {isSubmitting ? "Saving..." : isEditing ? "Update Event" : "Create Event"}
       </button>
     </form>
   );

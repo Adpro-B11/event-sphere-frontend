@@ -318,8 +318,8 @@ export default function EventDetailPage() {
             </CardFooter>
           </Card>
 
-          {/* Admin Actions Card - Only visible to organizers/admins who can manage this event */}
-          {canManageEvent(user) && (
+          {/* Admin Actions Card - Only visible to event's actual organizer or admins */}
+          {canManageEvent(user, event.organizer) && (
             <Card>
               <CardHeader>
                 <CardTitle>Admin Actions</CardTitle>
