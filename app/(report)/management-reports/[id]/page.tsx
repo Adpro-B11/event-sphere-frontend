@@ -617,7 +617,7 @@ export default function ReportDetailPage() {
                       <Label htmlFor="status-select">Update Status</Label>
                       <Select
                         value={selectedStatus}
-                        onValueChange={(value) =>
+                        onValueChange={(value: string) => // Add the type annotation here
                           setSelectedStatus(value as ReportStatus)
                         }
                       >

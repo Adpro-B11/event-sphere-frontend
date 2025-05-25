@@ -59,20 +59,23 @@ export default function EventDetailPage() {
   }
 
   const handleStatusChange = async (newStatus: string) => {
-    setUpdating(true)
+    if (!user) return;
+    setUpdating(true);
     try {
-      await EventService.updateEventStatus(eventId, newStatus)
-      // Fetch the updated event data
-      const updatedEvent = await EventService.getEventById(eventId)
-      setEvent(updatedEvent)
+      const updatedEvent = await EventService.updateEventStatus(
+        eventId,
+        newStatus,
+        user.username
+      );
+      // langsung update state biar badge dan tombol berubah
+      setEvent(updatedEvent);
     } catch (err) {
-      setError(`Failed to update event status to ${newStatus}`)
-      console.error(err)
+      console.error("Failed to update status:", err);
+      setError("Gagal mengubah status event");
     } finally {
-      setUpdating(false)
+      setUpdating(false);
     }
-  }
-
+  };
   const isEventFinished = (eventDate: string) => {
     const today = new Date()
     const eventDateObj = new Date(eventDate)
