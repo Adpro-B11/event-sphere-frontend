@@ -139,6 +139,7 @@ const handlePurchaseClick = () => {
       const purchaseRequest = {
         userId: user?.id || "",
         amount: totalAmount,
+        eventId: eventId,
         ticketData,
       }
 

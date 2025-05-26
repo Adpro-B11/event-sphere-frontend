@@ -11,6 +11,7 @@ export interface Ticket {
 export interface PurchaseRequest {
   userId: string
   amount: number
+  eventId: string   
   ticketData: Record<string, string>
 }
 

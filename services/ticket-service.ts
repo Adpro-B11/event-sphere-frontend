@@ -5,6 +5,7 @@ import type {
   UpdateTicketRequest,
   PurchaseRequest,
 } from "@/types/ticket";
+import axios from "axios";
 
 const TicketService = {
   getTicketsByEvent: async (eventId: string): Promise<Ticket[]> => {
@@ -30,14 +31,21 @@ const TicketService = {
   deleteTicket: async (ticketId: string): Promise<void> => {
     await eventApiClient.delete(`/api/tickets/${ticketId}`);
   },
-
+  
   purchaseTickets: async (
     eventId: string,
     purchaseData: PurchaseRequest
   ): Promise<{ success: boolean; transactionId?: string; message?: string }> => {
-    const response = await eventApiClient.post<{ success: boolean; transactionId?: string; message?: string }>(
-      `/api/payment/purchase/${eventId}`,
-      purchaseData
+    const jwt = localStorage.getItem('token'); 
+    const response = await axios.post(
+      `http://localhost:8082/api/transactions/purchase/${eventId}`,
+      purchaseData,
+      {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+        // withCredentials: true, // Tambahkan jika backend juga perlu cookie
+      }
     );
     return response.data;
   },
