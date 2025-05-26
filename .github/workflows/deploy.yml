@@ -11,12 +11,14 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
       - name: Create Deploy Script
         run: |
           cat << 'EOF' > deploy.sh
@@ -48,16 +50,18 @@ jobs:
           # Git operations
           git fetch origin
           git checkout "$2"
+          git reset --hard            # discard local changes to avoid conflicts
+          git clean -fd               # remove untracked files/directories
           git pull origin "$2"
           
-          # Find pnpm and pm2
+          # Find pnpm and pm2 commands, fallback to npx if missing globally
           PNPM_CMD=$(command -v pnpm || echo "$HOME/.local/share/pnpm/pnpm" || echo "$HOME/node_modules/.bin/pnpm" || echo "npx pnpm")
           PM2_CMD=$(command -v pm2 || echo "$HOME/node_modules/.bin/pm2" || echo "npx pm2")
           
           echo "Using pnpm at: $PNPM_CMD"
           echo "Using pm2 at: $PM2_CMD"
           
-          # Install pnpm and pm2 if not available
+          # Install pnpm and pm2 if not installed
           if ! command -v pnpm &> /dev/null; then
             echo "Installing pnpm..."
             npm install -g pnpm || npx pnpm@latest -v
@@ -68,7 +72,7 @@ jobs:
             npm install -g pm2 || npx pm2@latest -v
           fi
           
-          # Build and deploy
+          # Install dependencies, build, and restart app
           echo "Running pnpm install..."
           $PNPM_CMD install || npx pnpm install
           
@@ -80,13 +84,13 @@ jobs:
           
           echo "Deployment completed successfully!"
           EOF
-          
+
           chmod +x deploy.sh
-      
+
       - name: Copy Deploy Script to Server
         run: |
           scp -i ~/.ssh/id_ed25519 deploy.sh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/deploy.sh
-      
+
       - name: Execute Deploy Script
         env:
           BRANCH: ${{ github.ref_name }}
