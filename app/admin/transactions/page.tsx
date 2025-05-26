@@ -69,6 +69,8 @@ export default function AdminTransactionsPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [createdAfter, setCreatedAfter] = useState<string>("");
+  const [createdBefore, setCreatedBefore] = useState<string>("");
 
   useEffect(() => {
     fetchTransactions();
@@ -86,8 +88,8 @@ export default function AdminTransactionsPage() {
 
     try {
       const params: FilterTransactionsParams = {
-        currentUserId: user.id,
-        isAdmin: true
+        ...(createdAfter && { createdAfter: new Date(createdAfter).toISOString() }),
+        ...(createdBefore && { createdBefore: new Date(createdBefore).toISOString() }),
       };
 
       const data = await PaymentService.filterTransactions(params);

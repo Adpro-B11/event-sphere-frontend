@@ -86,7 +86,7 @@ export default function BalanceDisplay() {
 
             <DropdownMenuItem asChild>
               <Link
-                  href="transactions"
+                  href="payment/transactions"
                   className="flex items-center w-full p-2 rounded-md hover:bg-gray-100 cursor-pointer"
                   onClick={() => setIsOpen(false)}
               >
@@ -147,7 +147,7 @@ export function MobileBalanceDisplay() {
 
   return (
       <div className="sm:hidden mb-2">
-        <Link href="/transactions">
+        <Link href="payment/transactions">
           <div className="flex items-center gap-2 p-3 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors">
             <Wallet className="h-4 w-4 text-white" />
             <div>

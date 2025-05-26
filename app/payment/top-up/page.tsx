@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, CreditCard, Building, ArrowLeft } from "lucide-react";
-import PaymentService, { TopUpRequest } from "@/services/payment-service";
+import PaymentService from "@/services/payment-service";
+import { TopUpRequest } from "@/types/payment";
 import ProtectedRoute from "@/components/protected-route";
 import Link from "next/link";
 

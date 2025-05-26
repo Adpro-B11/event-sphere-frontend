@@ -40,12 +40,6 @@ export default function DashboardPage() {
                 <h3 className="font-medium text-gray-700">Email</h3>
                 <p className="mt-2">{user?.email}</p>
               </div>
-              <div className="bg-gray-50 p-4 rounded-md">
-                <h3 className="font-medium text-gray-700">Balance</h3>
-                <p className="mt-2 text-2xl font-bold text-green-600">
-                  {PaymentService.formatCurrency(user?.balance || 0)}
-                </p>
-              </div>
             </div>
           </div>
 
@@ -236,7 +230,7 @@ export default function DashboardPage() {
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Top Up - Only for USER role */}
                 {user?.role === Role.USER && (
-                    <Link href="/top-up">
+                    <Link href="payment/top-up">
                       <Card className="hover:shadow-md transition-shadow cursor-pointer">
                         <CardContent className="p-4 text-center">
                           <Plus className="h-8 w-8 mx-auto mb-2 text-blue-600" />
@@ -249,7 +243,7 @@ export default function DashboardPage() {
 
                 {/* Transactions - Only for USER role */}
                 {user?.role === Role.USER && (
-                    <Link href="/transactions">
+                    <Link href="payment/transactions">
                       <Card className="hover:shadow-md transition-shadow cursor-pointer">
                         <CardContent className="p-4 text-center">
                           <History className="h-8 w-8 mx-auto mb-2 text-purple-600" />

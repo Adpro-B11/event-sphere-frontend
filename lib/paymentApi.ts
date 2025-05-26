@@ -12,17 +12,18 @@ const paymentApiClient: AxiosInstance = axios.create({
 });
 
 paymentApiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
+    (config) => {
+        const token = localStorage.getItem("token");
+        // LOG! Cek token sebelum dikirim
+        console.log("Sending JWT token: ", token);
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
 );
+
 
 paymentApiClient.interceptors.response.use(
   (response) => response,

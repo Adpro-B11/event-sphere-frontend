@@ -27,8 +27,6 @@ export interface Transaction {
 }
 
 export interface FilterTransactionsParams {
-  currentUserId: string;
-  isAdmin?: boolean;
   status?: string;
   type?: string;
   method?: string;

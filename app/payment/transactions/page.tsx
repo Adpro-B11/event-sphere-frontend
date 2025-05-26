@@ -24,46 +24,50 @@ export default function TransactionsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   
+  
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [methodFilter, setMethodFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState("desc");
+  const [createdAfter, setCreatedAfter] = useState<string>("");
+  const [createdBefore, setCreatedBefore] = useState<string>("");
+
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
   useEffect(() => {
-    fetchTransactions();
-  }, [user]);
+  if (user) fetchTransactions();
+}, [createdAfter, createdBefore]);
 
   useEffect(() => {
     filterAndSortTransactions();
   }, [transactions, searchQuery, statusFilter, typeFilter, methodFilter, sortOrder]);
 
-  const fetchTransactions = async () => {
-    if (!user) return;
+const fetchTransactions = async () => {
+  if (!user) return;
 
-    setIsLoading(true);
-    setError("");
+  setIsLoading(true);
+  setError("");
 
-    try {
-      const params: FilterTransactionsParams = {
-        currentUserId: user.id,
-        isAdmin: user.role === Role.ADMIN
-      };
+  try {
+    const params: FilterTransactionsParams = {
+      ...(createdAfter && { createdAfter: new Date(createdAfter).toISOString() }),
+      ...(createdBefore && { createdBefore: new Date(createdBefore).toISOString() }),
+    };
 
-      const data = await PaymentService.filterTransactions(params);
-      setTransactions(data);
-    } catch (err: any) {
-      console.error("Error fetching transactions:", err);
-      setError(err.response?.data?.message || "Failed to load transactions");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const data = await PaymentService.filterTransactions(params);
+    setTransactions(data);
+  } catch (err: any) {
+    console.error("Error fetching transactions:", err);
+    setError(err.response?.data?.message || "Failed to load transactions");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const filterAndSortTransactions = () => {
     let filtered = [...transactions];
@@ -249,7 +253,7 @@ export default function TransactionsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
               {/* Search */}
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
@@ -319,6 +323,18 @@ export default function TransactionsPage() {
                   </SelectItem>
                 </SelectContent>
               </Select>
+              <Input
+                type="datetime-local"
+                value={createdAfter}
+                onChange={e => setCreatedAfter(e.target.value)}
+                placeholder="Created After"
+              />
+              <Input
+                type="datetime-local"
+                value={createdBefore}
+                onChange={e => setCreatedBefore(e.target.value)}
+                placeholder="Created Before"
+              />
             </div>
           </CardContent>
         </Card>
