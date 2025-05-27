@@ -38,7 +38,7 @@ const TicketService = {
   ): Promise<{ success: boolean; transactionId?: string; message?: string }> => {
     const jwt = localStorage.getItem('token'); 
     const response = await axios.post(
-      `http://localhost:8082/api/transactions/purchase/${eventId}`,
+      `http://http://ec2-3-219-44-29.compute-1.amazonaws.com/api/transactions/purchase/${eventId}`,
       purchaseData,
       {
         headers: {

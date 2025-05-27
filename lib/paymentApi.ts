@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from "axios";
 
-const API_URL = "http://localhost:8082";
-// const API_URL = "http://ec2-3-219-44-29.compute-1.amazonaws.com";
+// const API_URL = "http://localhost:8082";
+const API_URL = "http://ec2-3-219-44-29.compute-1.amazonaws.com";
 
 // Create axios instance with proper typing
 const paymentApiClient: AxiosInstance = axios.create({

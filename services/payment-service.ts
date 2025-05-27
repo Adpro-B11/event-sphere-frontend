@@ -16,11 +16,8 @@ const PaymentService = {
 
 // Get transaction by ID - Handle GetByIdResponse wrapper
   getTransactionById: async (transactionId: string): Promise<Transaction> => {
-    console.log("Making API call to:", `/api/transactions/${transactionId}`);
-    console.log("Full URL:", `http://localhost:8082/api/transactions/${transactionId}`);
     
     const response = await paymentApiClient.get(`/api/transactions/${transactionId}`);
-    console.log("Raw API response:", response.data);
     
     // Handle GetByIdResponse wrapper from backend
     if (response.data && response.data.data) {
