@@ -310,7 +310,6 @@ export default function ReportDetailPage() {
               {report.status === "RESOLVED" && (
                 <div className="border-t pt-6 mt-6">
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-                    <div className="text-green-600 mb-2">✅</div>
                     <p className="text-green-800 font-medium">
                       This report has been resolved
                     </p>
