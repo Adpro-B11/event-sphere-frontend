@@ -126,7 +126,7 @@ const handlePurchaseClick = () => {
         if (quantity > 0) {
           const ticket = tickets.find((t) => t.id === ticketId)
           if (ticket) {
-            ticketData[ticket.type] = quantity.toString()
+            ticketData[ticket.id] = quantity.toString()
             totalAmount += ticket.price * quantity
           }
         }
