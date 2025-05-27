@@ -506,12 +506,6 @@ export default function AdminTransactionsPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem asChild>
-                                <Link href={`/transactions/${transaction.transactionId}`}>
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  View Details
-                                </Link>
-                              </DropdownMenuItem>
                               <DropdownMenuItem 
                                 className="text-red-600"
                                 onClick={() => {

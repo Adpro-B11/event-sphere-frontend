@@ -14,14 +14,19 @@ const PaymentService = {
     return response.data;
   },
 
-  // Get transaction by ID - FIX: Menangani response yang berbeda
+// Get transaction by ID - Handle GetByIdResponse wrapper
   getTransactionById: async (transactionId: string): Promise<Transaction> => {
-    const response = await paymentApiClient.get(`/api/transactions/${transactionId}`);
+    console.log("Making API call to:", `/api/transactions/${transactionId}`);
+    console.log("Full URL:", `http://localhost:8082/api/transactions/${transactionId}`);
     
-    // Handle different response structures
+    const response = await paymentApiClient.get(`/api/transactions/${transactionId}`);
+    console.log("Raw API response:", response.data);
+    
+    // Handle GetByIdResponse wrapper from backend
     if (response.data && response.data.data) {
       return response.data.data;
     }
+    // If backend returns transaction directly
     return response.data;
   },
 

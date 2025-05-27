@@ -177,7 +177,7 @@ const fetchTransactions = async () => {
                   {formatDate(transaction.createdAt)}
                 </TableCell>
                 <TableCell>
-                  <Link href={`/transactions/${transaction.transactionId}`}>
+                  <Link href={`/payment/transactions/${transaction.transactionId}`}>
                     <Button variant="ghost" size="sm">
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -211,7 +211,7 @@ const fetchTransactions = async () => {
             <h1 className="text-3xl font-bold">Transaction History</h1>
             <p className="text-gray-600 mt-1">View and manage your transactions</p>
           </div>
-          <Link href="payment/top-up">
+          <Link href="/payment/top-up">
             <Button className="bg-blue-600 text-white hover:bg-blue-700">
               <Plus className="h-4 w-4 mr-2" />
               Top Up Balance

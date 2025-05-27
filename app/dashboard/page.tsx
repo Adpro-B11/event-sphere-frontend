@@ -82,7 +82,7 @@ export default function DashboardPage() {
                         <p className="text-sm text-gray-600 mb-3">
                           Add funds to your account
                         </p>
-                        <Link href="payment/top-up">
+                        <Link href="/payment/top-up">
                           <Button className="w-full" size="sm">
                             <CreditCard className="h-4 w-4 mr-2" />
                             Top Up Now
@@ -103,7 +103,7 @@ export default function DashboardPage() {
                         <p className="text-sm text-gray-600 mb-3">
                           View all your transactions
                         </p>
-                        <Link href="payment/transactions">
+                        <Link href="/payment/transactions">
                           <Button variant="outline" className="w-full" size="sm">
                             View History
                             <ArrowRight className="h-4 w-4 ml-2" />
@@ -230,7 +230,7 @@ export default function DashboardPage() {
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Top Up - Only for USER role */}
                 {user?.role === Role.USER && (
-                    <Link href="payment/top-up">
+                    <Link href="/payment/top-up">
                       <Card className="hover:shadow-md transition-shadow cursor-pointer">
                         <CardContent className="p-4 text-center">
                           <Plus className="h-8 w-8 mx-auto mb-2 text-blue-600" />
@@ -243,7 +243,7 @@ export default function DashboardPage() {
 
                 {/* Transactions - Only for USER role */}
                 {user?.role === Role.USER && (
-                    <Link href="payment/transactions">
+                    <Link href="/payment/transactions">
                       <Card className="hover:shadow-md transition-shadow cursor-pointer">
                         <CardContent className="p-4 text-center">
                           <History className="h-8 w-8 mx-auto mb-2 text-purple-600" />
