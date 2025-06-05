@@ -2,21 +2,23 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
+import { useAuth } from "@/contexts/auth-context"
+import { canManageEvent } from "@/utils/role-utils"
 import Link from "next/link"
 import Image from "next/image"
-import { useAuth } from "@/contexts/auth-context"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { CalendarDays, MapPin, User, DollarSign, Clock, Star, MessageSquare } from "lucide-react"
-import { Event } from "@/types/event"
+import { CalendarDays, MapPin, User, DollarSign, MessageSquare, Star } from 'lucide-react'
+import type { Event } from "@/types/event"
 import EventService from "@/services/event-service"
+import TicketManagement from "@/components/tickets/ticket-management"
 
 export default function EventDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const { user, isAuthenticated } = useAuth()
+  const { user } = useAuth()
   const [event, setEvent] = useState<Event | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
@@ -44,34 +46,37 @@ export default function EventDetailPage() {
   }, [eventId])
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this event?')) return
-    
+    if (!confirm("Are you sure you want to delete this event?")) return
+
     setDeleting(true)
     try {
       await EventService.deleteEvent(eventId)
-      router.push('/events')
+      router.push("/events")
     } catch (err) {
-      setError('Failed to delete event')
+      setError("Failed to delete event")
       console.error(err)
       setDeleting(false)
     }
   }
 
   const handleStatusChange = async (newStatus: string) => {
-    setUpdating(true)
+    if (!user) return;
+    setUpdating(true);
     try {
-      await EventService.updateEventStatus(eventId, newStatus)
-      // Fetch the updated event data
-      const updatedEvent = await EventService.getEventById(eventId)
-      setEvent(updatedEvent)
+      const updatedEvent = await EventService.updateEventStatus(
+        eventId,
+        newStatus,
+        user.username
+      );
+      // langsung update state biar badge dan tombol berubah
+      setEvent(updatedEvent);
     } catch (err) {
-      setError(`Failed to update event status to ${newStatus}`)
-      console.error(err)
+      console.error("Failed to update status:", err);
+      setError("Gagal mengubah status event");
     } finally {
-      setUpdating(false)
+      setUpdating(false);
     }
-  }
-
+  };
   const isEventFinished = (eventDate: string) => {
     const today = new Date()
     const eventDateObj = new Date(eventDate)
@@ -80,32 +85,32 @@ export default function EventDetailPage() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     })
   }
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
     }).format(price)
   }
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
-      case 'PUBLISHED':
-        return 'bg-green-100 text-green-800'
-      case 'CANCELLED':
-        return 'bg-red-100 text-red-800'
-      case 'DRAFT':
-        return 'bg-gray-100 text-gray-800'
+      case "PUBLISHED":
+        return "bg-green-100 text-green-800"
+      case "CANCELLED":
+        return "bg-red-100 text-red-800"
+      case "DRAFT":
+        return "bg-gray-100 text-gray-800"
       default:
-        return 'bg-gray-100 text-gray-800'
+        return "bg-gray-100 text-gray-800"
     }
   }
 
@@ -148,6 +153,9 @@ export default function EventDetailPage() {
   }
 
   const eventFinished = isEventFinished(event.date)
+  const isAdmin = user?.role === "ADMIN"
+  const isOrganizer = user?.role === "ORGANIZER"
+  const canManageEvent = isAdmin || isOrganizer
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -162,13 +170,11 @@ export default function EventDetailPage() {
 
       {/* Event Header */}
       <div className="mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">{event.title}</h1>
-            <div className="flex items-center gap-2">
-              <Badge className={getStatusBadgeColor(event.status || 'DRAFT')}>
-                {event.status || 'DRAFT'}
-              </Badge>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 break-words">{event.title}</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge className={getStatusBadgeColor(event.status || "DRAFT")}>{event.status || "DRAFT"}</Badge>
               {eventFinished && (
                 <Badge variant="outline" className="text-blue-600 border-blue-600">
                   Event Finished
@@ -179,33 +185,30 @@ export default function EventDetailPage() {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Main Content */}
-        <div className="lg:col-span-2">
-          {/* Event Image Placeholder */}
+        <div className="lg:col-span-2 min-w-0">
           <div className="mb-8">
-            <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <Image 
-                  src="/placeholder.svg" 
-                  alt="Event placeholder" 
-                  width={100} 
-                  height={100} 
-                  className="mx-auto mb-2 opacity-50"
-                />
-                <p>Event Image</p>
-              </div>
+            <div className="w-full h-64 sm:h-80 lg:h-96 rounded-lg overflow-hidden">
+              <Image 
+                src="https://ticket.eventhk.com/image/cache/catalog/journal3/HOME-eventhk2015-5764x3000.jpg" 
+                alt={`${event.title} event image`}
+                width={1000}
+                height={500}
+                className="w-full h-full object-cover"
+                priority
+              />
             </div>
           </div>
 
           {/* Event Description */}
           <Card className="mb-8">
             <CardHeader>
-              <CardTitle>About This Event</CardTitle>
+              <CardTitle className="text-lg">About This Event</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                {event.description || 'No description provided.'}
+              <p className="text-gray-700 leading-relaxed whitespace-pre-line text-sm sm:text-base break-words">
+                {event.description || "No description provided."}
               </p>
             </CardContent>
           </Card>
@@ -214,13 +217,11 @@ export default function EventDetailPage() {
           {eventFinished && (
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Star className="h-5 w-5 text-yellow-500" />
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Star className="h-5 w-5 text-yellow-500 flex-shrink-0" />
                   Event Reviews
                 </CardTitle>
-                <CardDescription>
-                  See what attendees thought about this event
-                </CardDescription>
+                <CardDescription className="text-sm">See what attendees thought about this event</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-4">
@@ -237,19 +238,19 @@ export default function EventDetailPage() {
         </div>
 
         {/* Sidebar */}
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 min-w-0">
           {/* Event Details Card */}
-          <Card className="mb-6 sticky top-4">
+          <Card className="mb-6 top-4">
             <CardHeader>
-              <CardTitle>Event Details</CardTitle>
+              <CardTitle className="text-lg">Event Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Date */}
               <div className="flex items-start gap-3">
-                <CalendarDays className="h-5 w-5 text-gray-500 mt-0.5" />
-                <div>
-                  <p className="font-medium">Date & Time</p>
-                  <p className="text-gray-600">{formatDate(event.date)}</p>
+                <CalendarDays className="h-5 w-5 text-gray-500 mt-0.5 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-sm">Date & Time</p>
+                  <p className="text-gray-600 text-sm break-words">{formatDate(event.date)}</p>
                 </div>
               </div>
 
@@ -257,10 +258,10 @@ export default function EventDetailPage() {
 
               {/* Location */}
               <div className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-gray-500 mt-0.5" />
-                <div>
-                  <p className="font-medium">Location</p>
-                  <p className="text-gray-600">{event.location}</p>
+                <MapPin className="h-5 w-5 text-gray-500 mt-0.5 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-sm">Location</p>
+                  <p className="text-gray-600 text-sm break-words">{event.location}</p>
                 </div>
               </div>
 
@@ -270,102 +271,87 @@ export default function EventDetailPage() {
               {event.organizer && (
                 <>
                   <div className="flex items-start gap-3">
-                    <User className="h-5 w-5 text-gray-500 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Organizer</p>
-                      <p className="text-gray-600">{event.organizer}</p>
+                    <User className="h-5 w-5 text-gray-500 mt-0.5 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-sm">Organizer</p>
+                      <p className="text-gray-600 text-sm break-words">{event.organizer}</p>
                     </div>
                   </div>
                   <Separator />
                 </>
               )}
 
-              {/* Price */}
+              {/* Price Range */}
               <div className="flex items-start gap-3">
-                <DollarSign className="h-5 w-5 text-gray-500 mt-0.5" />
-                <div>
-                  <p className="font-medium">Price</p>
-                  <p className="text-2xl font-bold text-green-600">{formatPrice(event.price)}</p>
+                <DollarSign className="h-5 w-5 text-gray-500 mt-0.5 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-sm">Starting Price</p>
+                  <p className="text-base font-bold text-green-600 break-all">{formatPrice(event.price)}</p>
+                  <p className="text-xs text-gray-500">See tickets below for all pricing</p>
                 </div>
               </div>
             </CardContent>
-
-            <CardFooter className="flex flex-col gap-2">
-              {event.status === 'PUBLISHED' && !eventFinished && (
-                <Button className="w-full" size="lg">
-                  Register for Event
-                </Button>
-              )}
-              {event.status === 'CANCELLED' && (
-                <Button className="w-full" variant="destructive" disabled>
-                  Event Cancelled
-                </Button>
-              )}
-              {eventFinished && (
-                <Button className="w-full" variant="outline" disabled>
-                  Event Ended
-                </Button>
-              )}
-              {event.status === 'DRAFT' && (
-                <Button className="w-full" variant="secondary" disabled>
-                  Event Not Published
-                </Button>
-              )}
-            </CardFooter>
           </Card>
 
-          {/* Admin Actions Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Admin Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Link 
-                href={`/events/${event.id}/edit`} 
-                className="w-full inline-block text-center bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors"
-              >
-                Edit Event
-              </Link>
-              
-              {event.status !== 'PUBLISHED' && (
-                <button 
-                  onClick={() => handleStatusChange('PUBLISHED')}
-                  disabled={updating}
-                  className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 disabled:opacity-50 transition-colors"
-                >
-                  {updating ? 'Updating...' : 'Publish Event'}
-                </button>
-              )}
-              
-              {event.status !== 'CANCELLED' && (
-                <button 
-                  onClick={() => handleStatusChange('CANCELLED')}
-                  disabled={updating}
-                  className="w-full bg-orange-600 text-white py-2 px-4 rounded hover:bg-orange-700 disabled:opacity-50 transition-colors"
-                >
-                  {updating ? 'Updating...' : 'Cancel Event'}
-                </button>
-              )}
+          {/* Ticket Management - Replaces the simple registration button */}
+          <div className="mb-6">
+            <TicketManagement eventId={eventId} eventStatus={event.status || "DRAFT"} isEventFinished={eventFinished} />
+          </div>
 
-              {event.status !== 'DRAFT' && (
-                <button 
-                  onClick={() => handleStatusChange('DRAFT')}
-                  disabled={updating}
-                  className="w-full bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600 disabled:opacity-50 transition-colors"
+          {/* Admin Actions Card - Only show for admins/organizers */}
+          {canManageEvent && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Admin Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Link
+                  href={`/events/${event.id}/edit`}
+                  className="w-full inline-block text-center bg-blue-600 text-white py-2.5 px-4 rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
                 >
-                  {updating ? 'Updating...' : 'Draft Event'}
+                  Edit Event
+                </Link>
+
+                {event.status !== "PUBLISHED" && (
+                  <button
+                    onClick={() => handleStatusChange("PUBLISHED")}
+                    disabled={updating}
+                    className="w-full bg-green-600 text-white py-2.5 px-4 rounded-md hover:bg-green-700 disabled:opacity-50 transition-colors text-sm font-medium"
+                  >
+                    {updating ? "Updating..." : "Publish Event"}
+                  </button>
+                )}
+
+                {event.status !== "CANCELLED" && (
+                  <button
+                    onClick={() => handleStatusChange("CANCELLED")}
+                    disabled={updating}
+                    className="w-full bg-orange-600 text-white py-2.5 px-4 rounded-md hover:bg-orange-700 disabled:opacity-50 transition-colors text-sm font-medium"
+                  >
+                    {updating ? "Updating..." : "Cancel Event"}
+                  </button>
+                )}
+
+                {event.status !== 'DRAFT' && (
+                  <button 
+                    onClick={() => handleStatusChange('DRAFT')}
+                    disabled={updating}
+                    className="w-full bg-gray-500 text-white py-2.5 px-4 rounded-md hover:bg-gray-600 disabled:opacity-50 transition-colors text-sm font-medium"
+                  >
+                    {updating ? 'Updating...' : 'Draft Event'}
+                  </button>
+                )}
+                
+                <button 
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="w-full bg-red-600 text-white py-2.5 px-4 rounded-md hover:bg-red-700 disabled:opacity-50 transition-colors text-sm font-medium"
+                >
+                  {deleting ? 'Deleting...' : 'Delete Event'}
                 </button>
-              )}
-              
-              <button 
-                onClick={handleDelete}
-                disabled={deleting}
-                className="w-full bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 disabled:opacity-50 transition-colors"
-              >
-                {deleting ? 'Deleting...' : 'Delete Event'}
-              </button>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>

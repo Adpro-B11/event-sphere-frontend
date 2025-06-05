@@ -1,6 +1,4 @@
-// Review and Event Rating Summary interfaces for EventSphere
-
-export interface Review {
+export interface ReviewDTO {
   id: string;
   rating: number;
   comment?: string;
@@ -11,17 +9,15 @@ export interface Review {
   eventId: string;
 }
 
-export interface CreateReviewRequest {
+export interface ReviewRequest {
   rating: number;
   comment?: string;
+  userId: string;
+  username: string;
+  eventId: string;
 }
 
-export interface UpdateReviewRequest {
-  rating: number;
-  comment?: string;
-}
-
-export interface EventRatingSummary {
+export interface EventRatingSummaryDTO {
   eventId: string;
   totalReviews: number;
   averageRating: number;
@@ -36,6 +32,6 @@ export interface ReviewStats {
   totalReviews: number;
   averageRating: number;
   ratingDistribution: {
-    [key: number]: number; // rating -> count
+    [key: number]: number;
   };
 }

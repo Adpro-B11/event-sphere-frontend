@@ -2,11 +2,14 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
+import { useAuth } from "@/contexts/auth-context";
+import { canManageEvent } from "@/utils/role-utils";
 import type { Event } from '@/types/event';
 import EventService from '@/services/event-service';
 import { EventCard } from './components/EventCard';
 
 export default function EventsPage() {
+  const { user } = useAuth();
   const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,9 +88,13 @@ export default function EventsPage() {
     <div className="container mx-auto py-8 px-4">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
         <h1 className="text-3xl font-bold">Upcoming Events</h1>
-        <Link href="/events/create" className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors duration-150">
-          Create Event
-        </Link>
+        
+        {/* Only show Create Event button for organizers */}
+        {canManageEvent(user) && (
+          <Link href="/events/create" className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors duration-150">
+            Create Event
+          </Link>
+        )}
       </div>
 
       {error && (
