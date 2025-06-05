@@ -19,7 +19,7 @@ import type { Event } from "@/types/event"
 import type { ReviewDTO, EventRatingSummaryDTO } from "@/types/review"
 
 export default function EventReviewsPage() {
-  const params = useParams()f
+  const params = useParams()
   const router = useRouter()
   const { user, isAuthenticated } = useAuth()
   
